@@ -33,11 +33,11 @@ public class LectureEdit implements Serializable
     private Long peopleNumberLimit;
 
     /** 开始时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date lectureStartTime;
 
     /** 结束时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date lectureEndTime;
 
     /** 参加人数 */

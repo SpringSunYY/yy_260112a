@@ -1,26 +1,28 @@
 package com.lz.manage.service.impl;
 
-import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import javax.validation.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.lz.common.utils.StringUtils;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lz.common.utils.DateUtils;
-import javax.annotation.Resource;
-import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.DateUtils;
+import com.lz.common.utils.SecurityUtils;
+import com.lz.common.utils.StringUtils;
+import com.lz.common.utils.ThrowUtils;
 import com.lz.manage.mapper.LectureMapper;
+import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Lecture;
-import com.lz.manage.service.ILectureService;
 import com.lz.manage.model.dto.lecture.LectureQuery;
+import com.lz.manage.model.enums.ClassroomStatusEnum;
+import com.lz.manage.model.enums.LectureStatusEnum;
 import com.lz.manage.model.vo.lecture.LectureVo;
+import com.lz.manage.service.IClassroomService;
+import com.lz.manage.service.ILectureService;
+import com.lz.system.service.ISysUserService;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 讲座信息Service业务层处理
@@ -29,13 +31,19 @@ import com.lz.manage.model.vo.lecture.LectureVo;
  * @date 2026-01-14
  */
 @Service
-public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> implements ILectureService
-{
+public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> implements ILectureService {
 
     @Resource
     private LectureMapper lectureMapper;
 
+    @Resource
+    private ISysUserService sysUserService;
+
+    @Resource
+    private IClassroomService classroomService;
+
     //region mybatis代码
+
     /**
      * 查询讲座信息
      *
@@ -43,8 +51,7 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 讲座信息
      */
     @Override
-    public Lecture selectLectureById(Long id)
-    {
+    public Lecture selectLectureById(Long id) {
         return lectureMapper.selectLectureById(id);
     }
 
@@ -55,9 +62,24 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 讲座信息
      */
     @Override
-    public List<Lecture> selectLectureList(Lecture lecture)
-    {
-        return lectureMapper.selectLectureList(lecture);
+    public List<Lecture> selectLectureList(Lecture lecture) {
+        List<Lecture> lectures = lectureMapper.selectLectureList(lecture);
+        for (Lecture info : lectures) {
+            SysUser sysUser = sysUserService.selectUserById(info.getUserId());
+            if (StringUtils.isNotNull(sysUser)) {
+                info.setUserName(sysUser.getUserName());
+            }
+            Classroom classroom = classroomService.selectClassroomById(info.getClassroomId());
+            if (StringUtils.isNotNull(classroom)) {
+                info.setClassroomName(classroom.getName());
+            }
+            SysUser teacherUser = sysUserService.selectUserById(info.getTeacherId());
+            if (StringUtils.isNotNull(teacherUser)) {
+                info.setTeacherName(teacherUser.getUserName());
+            }
+
+        }
+        return lectures;
     }
 
     /**
@@ -67,8 +89,35 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 结果
      */
     @Override
-    public int insertLecture(Lecture lecture)
-    {
+    public int insertLecture(Lecture lecture) {
+        //判断开始时间是否小于结束时间
+        ThrowUtils.throwIf(lecture.getLectureStartTime().after(lecture.getLectureEndTime()),
+                "开始时间不能大于结束时间");
+        //查询教室是否存在且正常
+        Classroom classroom = classroomService.selectClassroomById(lecture.getClassroomId());
+        ThrowUtils.throwIf(StringUtils.isNull(classroom)
+                        || classroom.getStatus().equals(ClassroomStatusEnum.CLASSROOM_STATUS_2.getValue()),
+                "教室不存在或者异常");
+        //查询讲师是否存在
+        SysUser teacherUser = sysUserService.selectUserById(lecture.getTeacherId());
+        ThrowUtils.throwIf(StringUtils.isNull(teacherUser), "讲师不存在");
+        // 判断开始结束时间范围内是否有其他讲座，待审核的不需要管
+        LambdaQueryWrapper<Lecture> queryWrapper = new LambdaQueryWrapper<>();
+        ArrayList<String> statusList = new ArrayList<>();
+        statusList.add(LectureStatusEnum.LECTURE_STATUS_3.getValue());
+        statusList.add(LectureStatusEnum.LECTURE_STATUS_2.getValue());
+        queryWrapper
+                .in(Lecture::getStatus, statusList)
+                .eq(Lecture::getClassroomId, lecture.getClassroomId())
+                .gt(Lecture::getLectureEndTime, lecture.getLectureStartTime())   // 现有结束 > 新开始
+                .lt(Lecture::getLectureStartTime, lecture.getLectureEndTime());  // 现有开始 < 新结束
+
+        List<Lecture> existingLectures = this.list(queryWrapper);
+        ThrowUtils.throwIf(!existingLectures.isEmpty(), "该时间段内教室已被占用，无法安排讲座");
+
+        //初始化状态
+        lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_1.getValue());
+        lecture.setUserId(SecurityUtils.getUserId());
         lecture.setCreateTime(DateUtils.getNowDate());
         return lectureMapper.insertLecture(lecture);
     }
@@ -80,8 +129,13 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 结果
      */
     @Override
-    public int updateLecture(Lecture lecture)
-    {
+    public int updateLecture(Lecture lecture) {
+        //判断开始时间是否小于结束时间
+        ThrowUtils.throwIf(lecture.getLectureStartTime().after(lecture.getLectureEndTime()),
+                "开始时间不能大于结束时间");
+        //判断是否已结束
+        ThrowUtils.throwIf(lecture.getStatus().equals(LectureStatusEnum.LECTURE_STATUS_4.getValue()),
+                "讲座已结束不可再次修改");
         lecture.setUpdateTime(DateUtils.getNowDate());
         return lectureMapper.updateLecture(lecture);
     }
@@ -93,8 +147,7 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 结果
      */
     @Override
-    public int deleteLectureByIds(Long[] ids)
-    {
+    public int deleteLectureByIds(Long[] ids) {
         return lectureMapper.deleteLectureByIds(ids);
     }
 
@@ -105,13 +158,13 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      * @return 结果
      */
     @Override
-    public int deleteLectureById(Long id)
-    {
+    public int deleteLectureById(Long id) {
         return lectureMapper.deleteLectureById(id);
     }
+
     //endregion
     @Override
-    public QueryWrapper<Lecture> getQueryWrapper(LectureQuery lectureQuery){
+    public QueryWrapper<Lecture> getQueryWrapper(LectureQuery lectureQuery) {
         QueryWrapper<Lecture> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = lectureQuery.getParams();
@@ -119,28 +172,28 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
             params = new HashMap<>();
         }
         Long id = lectureQuery.getId();
-        queryWrapper.eq( StringUtils.isNotNull(id),"id",id);
+        queryWrapper.eq(StringUtils.isNotNull(id), "id", id);
 
         Long classroomId = lectureQuery.getClassroomId();
-        queryWrapper.eq( StringUtils.isNotNull(classroomId),"classroom_id",classroomId);
+        queryWrapper.eq(StringUtils.isNotNull(classroomId), "classroom_id", classroomId);
 
         String name = lectureQuery.getName();
-        queryWrapper.like(StringUtils.isNotEmpty(name) ,"name",name);
+        queryWrapper.like(StringUtils.isNotEmpty(name), "name", name);
 
         Long teacherId = lectureQuery.getTeacherId();
-        queryWrapper.eq( StringUtils.isNotNull(teacherId),"teacher_id",teacherId);
+        queryWrapper.eq(StringUtils.isNotNull(teacherId), "teacher_id", teacherId);
 
         Date lectureStartTime = lectureQuery.getLectureStartTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginLectureStartTime"))&&StringUtils.isNotNull(params.get("endLectureStartTime")),"lecture_start_time",params.get("beginLectureStartTime"),params.get("endLectureStartTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginLectureStartTime")) && StringUtils.isNotNull(params.get("endLectureStartTime")), "lecture_start_time", params.get("beginLectureStartTime"), params.get("endLectureStartTime"));
 
         String status = lectureQuery.getStatus();
-        queryWrapper.eq(StringUtils.isNotEmpty(status) ,"status",status);
+        queryWrapper.eq(StringUtils.isNotEmpty(status), "status", status);
 
         Long userId = lectureQuery.getUserId();
-        queryWrapper.eq( StringUtils.isNotNull(userId),"user_id",userId);
+        queryWrapper.eq(StringUtils.isNotNull(userId), "user_id", userId);
 
         Date createTime = lectureQuery.getCreateTime();
-        queryWrapper.eq( StringUtils.isNotNull(createTime),"create_time",createTime);
+        queryWrapper.eq(StringUtils.isNotNull(createTime), "create_time", createTime);
 
         return queryWrapper;
     }
