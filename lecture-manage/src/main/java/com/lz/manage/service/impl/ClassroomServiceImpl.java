@@ -1,26 +1,22 @@
 package com.lz.manage.service.impl;
 
-import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import javax.validation.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.lz.common.utils.StringUtils;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lz.common.utils.DateUtils;
-import javax.annotation.Resource;
-import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.DateUtils;
+import com.lz.common.utils.SecurityUtils;
+import com.lz.common.utils.StringUtils;
 import com.lz.manage.mapper.ClassroomMapper;
 import com.lz.manage.model.domain.Classroom;
-import com.lz.manage.service.IClassroomService;
 import com.lz.manage.model.dto.classroom.ClassroomQuery;
 import com.lz.manage.model.vo.classroom.ClassroomVo;
+import com.lz.manage.service.IClassroomService;
+import com.lz.system.service.ISysUserService;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 教室信息Service业务层处理
@@ -29,13 +25,16 @@ import com.lz.manage.model.vo.classroom.ClassroomVo;
  * @date 2026-01-14
  */
 @Service
-public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom> implements IClassroomService
-{
+public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom> implements IClassroomService {
 
     @Resource
     private ClassroomMapper classroomMapper;
 
+    @Resource
+    private ISysUserService sysUserService;
+
     //region mybatis代码
+
     /**
      * 查询教室信息
      *
@@ -43,8 +42,7 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 教室信息
      */
     @Override
-    public Classroom selectClassroomById(Long id)
-    {
+    public Classroom selectClassroomById(Long id) {
         return classroomMapper.selectClassroomById(id);
     }
 
@@ -55,9 +53,15 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 教室信息
      */
     @Override
-    public List<Classroom> selectClassroomList(Classroom classroom)
-    {
-        return classroomMapper.selectClassroomList(classroom);
+    public List<Classroom> selectClassroomList(Classroom classroom) {
+        List<Classroom> classrooms = classroomMapper.selectClassroomList(classroom);
+        for (Classroom info : classrooms) {
+            SysUser sysUser = sysUserService.selectUserById(info.getUserId());
+            if (StringUtils.isNotNull(sysUser)) {
+                info.setUserName(sysUser.getUserName());
+            }
+        }
+        return classrooms;
     }
 
     /**
@@ -67,8 +71,8 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 结果
      */
     @Override
-    public int insertClassroom(Classroom classroom)
-    {
+    public int insertClassroom(Classroom classroom) {
+        classroom.setUserId(SecurityUtils.getUserId());
         classroom.setCreateTime(DateUtils.getNowDate());
         return classroomMapper.insertClassroom(classroom);
     }
@@ -80,8 +84,7 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 结果
      */
     @Override
-    public int updateClassroom(Classroom classroom)
-    {
+    public int updateClassroom(Classroom classroom) {
         classroom.setUpdateTime(DateUtils.getNowDate());
         return classroomMapper.updateClassroom(classroom);
     }
@@ -93,8 +96,7 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 结果
      */
     @Override
-    public int deleteClassroomByIds(Long[] ids)
-    {
+    public int deleteClassroomByIds(Long[] ids) {
         return classroomMapper.deleteClassroomByIds(ids);
     }
 
@@ -105,13 +107,13 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
      * @return 结果
      */
     @Override
-    public int deleteClassroomById(Long id)
-    {
+    public int deleteClassroomById(Long id) {
         return classroomMapper.deleteClassroomById(id);
     }
+
     //endregion
     @Override
-    public QueryWrapper<Classroom> getQueryWrapper(ClassroomQuery classroomQuery){
+    public QueryWrapper<Classroom> getQueryWrapper(ClassroomQuery classroomQuery) {
         QueryWrapper<Classroom> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = classroomQuery.getParams();
@@ -119,19 +121,19 @@ public class ClassroomServiceImpl extends ServiceImpl<ClassroomMapper, Classroom
             params = new HashMap<>();
         }
         Long id = classroomQuery.getId();
-        queryWrapper.eq( StringUtils.isNotNull(id),"id",id);
+        queryWrapper.eq(StringUtils.isNotNull(id), "id", id);
 
         String name = classroomQuery.getName();
-        queryWrapper.like(StringUtils.isNotEmpty(name) ,"name",name);
+        queryWrapper.like(StringUtils.isNotEmpty(name), "name", name);
 
         String status = classroomQuery.getStatus();
-        queryWrapper.eq(StringUtils.isNotEmpty(status) ,"status",status);
+        queryWrapper.eq(StringUtils.isNotEmpty(status), "status", status);
 
         Long userId = classroomQuery.getUserId();
-        queryWrapper.eq( StringUtils.isNotNull(userId),"user_id",userId);
+        queryWrapper.eq(StringUtils.isNotNull(userId), "user_id", userId);
 
         Date createTime = classroomQuery.getCreateTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime"))&&StringUtils.isNotNull(params.get("endCreateTime")),"create_time",params.get("beginCreateTime"),params.get("endCreateTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime")) && StringUtils.isNotNull(params.get("endCreateTime")), "create_time", params.get("beginCreateTime"), params.get("endCreateTime"));
 
         return queryWrapper;
     }
