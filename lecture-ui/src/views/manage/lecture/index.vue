@@ -306,7 +306,7 @@
         <!--          </el-radio-group>-->
         <!--        </el-form-item>-->
         <el-form-item label="讲座描述" prop="description">
-          <editor min-height="200" v-model="form.description" type="textarea" placeholder="请输入内容"/>
+          <editor min-height="200" v-model="form.description" placeholder="请输入内容"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
@@ -477,8 +477,8 @@ export default {
       this.title = "审核讲座";
       this.auditOpen = true;
     },
-    submitFormAudit(){
-      addLectureAudit(this.form).then(res=>{
+    submitFormAudit() {
+      addLectureAudit(this.form).then(res => {
         this.$modal.msgSuccess("审核成功");
         this.auditOpen = false;
         this.getList();
