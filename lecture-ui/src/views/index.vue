@@ -41,7 +41,14 @@
           <!-- 操作按钮 -->
           <div class="card-actions">
             <el-button size="small" @click="viewDetail(lecture)">查看详情</el-button>
-            <el-button type="primary" size="small" @click="makeAppointment(lecture)">预约</el-button>
+            <el-button
+              :type="lecture.isAppointment ? 'success' : 'primary'"
+              size="small"
+              :disabled="lecture.isAppointment"
+              @click="makeAppointment(lecture)"
+            >
+              {{ lecture.isAppointment ? '已预约' : '预约' }}
+            </el-button>
           </div>
         </div>
       </div>
@@ -155,6 +162,12 @@ export default {
 
     /** 预约 */
     makeAppointment(lecture) {
+      // 检查是否已预约
+      if (lecture.isAppointment) {
+        this.$message.warning('您已经预约过这个讲座了');
+        return;
+      }
+
       // 显示确认框
       this.$confirm(`确定要预约讲座"${lecture.name}"吗？`, '预约确认', {
         confirmButtonText: '确定预约',
@@ -168,6 +181,8 @@ export default {
 
         addAppointment(appointmentData).then(response => {
           this.$message.success('预约成功！');
+          // 更新预约状态
+          this.$set(lecture, 'isAppointment', true);
         }).catch(error => {
           this.$message.error('预约失败，请重试');
           console.error('预约失败:', error);
