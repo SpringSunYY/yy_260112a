@@ -101,6 +101,18 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
         //查询讲师是否存在
         SysUser teacherUser = sysUserService.selectUserById(lecture.getTeacherId());
         ThrowUtils.throwIf(StringUtils.isNull(teacherUser), "讲师不存在");
+        boolean conflict = isLectureTimeConflict(lecture);
+        ThrowUtils.throwIf(conflict, "教室时间冲突，不可申请该教室");
+
+        //初始化状态
+        lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_1.getValue());
+        lecture.setUserId(SecurityUtils.getUserId());
+        lecture.setCreateTime(DateUtils.getNowDate());
+        return lectureMapper.insertLecture(lecture);
+    }
+
+    @Override
+    public boolean isLectureTimeConflict(Lecture lecture) {
         // 判断开始结束时间范围内是否有其他讲座，待审核的不需要管
         LambdaQueryWrapper<Lecture> queryWrapper = new LambdaQueryWrapper<>();
         ArrayList<String> statusList = new ArrayList<>();
@@ -113,13 +125,7 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
                 .lt(Lecture::getLectureStartTime, lecture.getLectureEndTime());  // 现有开始 < 新结束
 
         List<Lecture> existingLectures = this.list(queryWrapper);
-        ThrowUtils.throwIf(!existingLectures.isEmpty(), "该时间段内教室已被占用，无法安排讲座");
-
-        //初始化状态
-        lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_1.getValue());
-        lecture.setUserId(SecurityUtils.getUserId());
-        lecture.setCreateTime(DateUtils.getNowDate());
-        return lectureMapper.insertLecture(lecture);
+        return !existingLectures.isEmpty();
     }
 
     /**

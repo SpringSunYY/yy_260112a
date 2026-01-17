@@ -156,7 +156,7 @@
                        prop="peopleNumberLimit"/>
       <el-table-column label="开始时间" align="center" v-if="columns[5].visible" prop="lectureStartTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.lectureStartTime)}}</span>
+          <span>{{ parseTime(scope.row.lectureStartTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="结束时间" align="center" v-if="columns[6].visible" prop="lectureEndTime" width="180">
@@ -198,6 +198,15 @@
             @click="handleUpdate(scope.row)"
             v-hasPermi="['manage:lecture:edit']"
           >修改
+          </el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-plus"
+            @click="handleAudit(scope.row)"
+            v-if="scope.row.status === '1'||scope.row.status === '5'"
+            v-hasPermi="['manage:lectureAudit:add']"
+          >审核
           </el-button>
           <el-button
             size="mini"
@@ -280,34 +289,57 @@
                           placeholder="请选择结束时间">
           </el-date-picker>
         </el-form-item>
-<!--        <el-form-item label="参加人数" prop="peopleJoinNumber">-->
-<!--          <el-input v-model="form.peopleJoinNumber" placeholder="请输入参加人数"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="签到人数" prop="peopleSignNumber">-->
-<!--          <el-input v-model="form.peopleSignNumber" placeholder="请输入签到人数"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="状态" prop="status">-->
-<!--          <el-radio-group v-model="form.status">-->
-<!--            <el-radio-->
-<!--              v-for="dict in dict.type.lecture_status"-->
-<!--              :key="dict.value"-->
-<!--              :label="dict.value"-->
-<!--            >{{ dict.label }}-->
-<!--            </el-radio>-->
-<!--          </el-radio-group>-->
-<!--        </el-form-item>-->
+        <!--        <el-form-item label="参加人数" prop="peopleJoinNumber">-->
+        <!--          <el-input v-model="form.peopleJoinNumber" placeholder="请输入参加人数"/>-->
+        <!--        </el-form-item>-->
+        <!--        <el-form-item label="签到人数" prop="peopleSignNumber">-->
+        <!--          <el-input v-model="form.peopleSignNumber" placeholder="请输入签到人数"/>-->
+        <!--        </el-form-item>-->
+        <!--        <el-form-item label="状态" prop="status">-->
+        <!--          <el-radio-group v-model="form.status">-->
+        <!--            <el-radio-->
+        <!--              v-for="dict in dict.type.lecture_status"-->
+        <!--              :key="dict.value"-->
+        <!--              :label="dict.value"-->
+        <!--            >{{ dict.label }}-->
+        <!--            </el-radio>-->
+        <!--          </el-radio-group>-->
+        <!--        </el-form-item>-->
         <el-form-item label="讲座描述" prop="description">
-          <editor min-height="200"  v-model="form.description" type="textarea" placeholder="请输入内容"/>
+          <editor min-height="200" v-model="form.description" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
-<!--        <el-form-item label="创建人" prop="userId">-->
-<!--          <el-input v-model="form.userId" placeholder="请输入创建人"/>-->
-<!--        </el-form-item>-->
+        <!--        <el-form-item label="创建人" prop="userId">-->
+        <!--          <el-input v-model="form.userId" placeholder="请输入创建人"/>-->
+        <!--        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 添加或修改讲座审核对话框 -->
+    <el-dialog :title="title" :visible.sync="auditOpen" width="500px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in dict.type.audit_status"
+              :key="dict.value"
+              :label="dict.value"
+            >{{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="审核描述" prop="description">
+          <el-input v-model="form.description" type="textarea" placeholder="请输入内容"/>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFormAudit">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -318,12 +350,15 @@
 import {addLecture, delLecture, getLecture, listLecture, updateLecture} from "@/api/manage/lecture";
 import {listClassroom} from "@/api/manage/classroom";
 import {allocatedUserList} from "@/api/system/role";
+import {addLectureAudit} from "@/api/manage/lectureAudit";
 
 export default {
   name: "Lecture",
-  dicts: ['lecture_status'],
+  dicts: ['lecture_status', 'audit_status'],
   data() {
     return {
+      //审核
+      auditOpen: false,
       //老师信息
       teacherList: [],
       teacherQuery: {
@@ -435,6 +470,20 @@ export default {
     this.getTeacherList();
   },
   methods: {
+    //审核
+    handleAudit(row) {
+      this.reset()
+      this.form.lectureId = row.id
+      this.title = "审核讲座";
+      this.auditOpen = true;
+    },
+    submitFormAudit(){
+      addLectureAudit(this.form).then(res=>{
+        this.$modal.msgSuccess("审核成功");
+        this.auditOpen = false;
+        this.getList();
+      })
+    },
     /** 查询老师信息列表 */
     remoteGetTeacher(keyword) {
       this.teacherQuery.userName = keyword;

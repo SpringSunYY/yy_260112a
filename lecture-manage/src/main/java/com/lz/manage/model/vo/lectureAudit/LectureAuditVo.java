@@ -25,12 +25,15 @@ public class LectureAuditVo implements Serializable
 
     /** 教室 */
     private Long classroomId;
+    private String classroomName;
 
     /** 讲座 */
     private Long lectureId;
+    private String lectureName;
 
     /** 讲师 */
     private Long teacherId;
+    private String teacherName;
 
     /** 人数 */
     private Long peopleNumberLimit;
@@ -43,6 +46,7 @@ public class LectureAuditVo implements Serializable
 
     /** 审核人 */
     private Long userId;
+    private String userName;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
