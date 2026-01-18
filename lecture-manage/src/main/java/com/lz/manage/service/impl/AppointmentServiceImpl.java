@@ -130,6 +130,7 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
      */
     @Override
     public int updateAppointment(Appointment appointment) {
+        //查询是否预约
         appointment.setUpdateTime(DateUtils.getNowDate());
         return appointmentMapper.updateAppointment(appointment);
     }
