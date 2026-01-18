@@ -1,26 +1,28 @@
 package com.lz.manage.service.impl;
 
-import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import javax.validation.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.lz.common.utils.StringUtils;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lz.common.utils.DateUtils;
-import javax.annotation.Resource;
-import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.DateUtils;
+import com.lz.common.utils.SecurityUtils;
+import com.lz.common.utils.StringUtils;
+import com.lz.common.utils.ThrowUtils;
 import com.lz.manage.mapper.EvaluateMapper;
+import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Evaluate;
-import com.lz.manage.service.IEvaluateService;
+import com.lz.manage.model.domain.Lecture;
 import com.lz.manage.model.dto.evaluate.EvaluateQuery;
 import com.lz.manage.model.vo.evaluate.EvaluateVo;
+import com.lz.manage.service.IClassroomService;
+import com.lz.manage.service.IEvaluateService;
+import com.lz.manage.service.ILectureService;
+import com.lz.system.service.ISysUserService;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 评价信息Service业务层处理
@@ -29,13 +31,23 @@ import com.lz.manage.model.vo.evaluate.EvaluateVo;
  * @date 2026-01-14
  */
 @Service
-public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> implements IEvaluateService
-{
+public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> implements IEvaluateService {
 
     @Resource
     private EvaluateMapper evaluateMapper;
 
+    @Resource
+    @Lazy
+    private ILectureService lectureService;
+
+    @Resource
+    private ISysUserService sysUserService;
+
+    @Resource
+    private IClassroomService classroomService;
+
     //region mybatis代码
+
     /**
      * 查询评价信息
      *
@@ -43,8 +55,7 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 评价信息
      */
     @Override
-    public Evaluate selectEvaluateById(Long id)
-    {
+    public Evaluate selectEvaluateById(Long id) {
         return evaluateMapper.selectEvaluateById(id);
     }
 
@@ -55,9 +66,27 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 评价信息
      */
     @Override
-    public List<Evaluate> selectEvaluateList(Evaluate evaluate)
-    {
-        return evaluateMapper.selectEvaluateList(evaluate);
+    public List<Evaluate> selectEvaluateList(Evaluate evaluate) {
+        List<Evaluate> evaluates = evaluateMapper.selectEvaluateList(evaluate);
+        for (Evaluate info : evaluates) {
+            SysUser sysUser = sysUserService.selectUserById(info.getUserId());
+            if (StringUtils.isNotNull(sysUser)) {
+                info.setUserName(sysUser.getUserName());
+            }
+            Classroom classroom = classroomService.selectClassroomById(info.getClassroomId());
+            if (StringUtils.isNotNull(classroom)) {
+                info.setClassroomName(classroom.getName());
+            }
+            Lecture lecture = lectureService.selectLectureById(info.getLectureId());
+            if (StringUtils.isNotNull(lecture)) {
+                info.setLectureName(lecture.getName());
+            }
+            SysUser teacherUser = sysUserService.selectUserById(info.getTeacherId());
+            if (StringUtils.isNotNull(teacherUser)) {
+                info.setTeacherName(teacherUser.getUserName());
+            }
+        }
+        return evaluates;
     }
 
     /**
@@ -67,8 +96,13 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 结果
      */
     @Override
-    public int insertEvaluate(Evaluate evaluate)
-    {
+    public int insertEvaluate(Evaluate evaluate) {
+        //查看讲座
+        Lecture lecture = lectureService.selectLectureById(evaluate.getLectureId());
+        ThrowUtils.throwIf(StringUtils.isNull(lecture), "讲座不存在");
+        evaluate.setClassroomId(lecture.getClassroomId());
+        evaluate.setTeacherId(lecture.getTeacherId());
+        evaluate.setUserId(SecurityUtils.getUserId());
         evaluate.setCreateTime(DateUtils.getNowDate());
         return evaluateMapper.insertEvaluate(evaluate);
     }
@@ -80,8 +114,7 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 结果
      */
     @Override
-    public int updateEvaluate(Evaluate evaluate)
-    {
+    public int updateEvaluate(Evaluate evaluate) {
         evaluate.setUpdateTime(DateUtils.getNowDate());
         return evaluateMapper.updateEvaluate(evaluate);
     }
@@ -93,8 +126,7 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 结果
      */
     @Override
-    public int deleteEvaluateByIds(Long[] ids)
-    {
+    public int deleteEvaluateByIds(Long[] ids) {
         return evaluateMapper.deleteEvaluateByIds(ids);
     }
 
@@ -105,13 +137,13 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      * @return 结果
      */
     @Override
-    public int deleteEvaluateById(Long id)
-    {
+    public int deleteEvaluateById(Long id) {
         return evaluateMapper.deleteEvaluateById(id);
     }
+
     //endregion
     @Override
-    public QueryWrapper<Evaluate> getQueryWrapper(EvaluateQuery evaluateQuery){
+    public QueryWrapper<Evaluate> getQueryWrapper(EvaluateQuery evaluateQuery) {
         QueryWrapper<Evaluate> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = evaluateQuery.getParams();
@@ -119,25 +151,25 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
             params = new HashMap<>();
         }
         Long id = evaluateQuery.getId();
-        queryWrapper.eq( StringUtils.isNotNull(id),"id",id);
+        queryWrapper.eq(StringUtils.isNotNull(id), "id", id);
 
         Long classroomId = evaluateQuery.getClassroomId();
-        queryWrapper.eq( StringUtils.isNotNull(classroomId),"classroom_id",classroomId);
+        queryWrapper.eq(StringUtils.isNotNull(classroomId), "classroom_id", classroomId);
 
         Long lectureId = evaluateQuery.getLectureId();
-        queryWrapper.eq( StringUtils.isNotNull(lectureId),"lecture_id",lectureId);
+        queryWrapper.eq(StringUtils.isNotNull(lectureId), "lecture_id", lectureId);
 
         Long teacherId = evaluateQuery.getTeacherId();
-        queryWrapper.eq( StringUtils.isNotNull(teacherId),"teacher_id",teacherId);
+        queryWrapper.eq(StringUtils.isNotNull(teacherId), "teacher_id", teacherId);
 
         String title = evaluateQuery.getTitle();
-        queryWrapper.like(StringUtils.isNotEmpty(title) ,"title",title);
+        queryWrapper.like(StringUtils.isNotEmpty(title), "title", title);
 
         Long userId = evaluateQuery.getUserId();
-        queryWrapper.eq( StringUtils.isNotNull(userId),"user_id",userId);
+        queryWrapper.eq(StringUtils.isNotNull(userId), "user_id", userId);
 
         Date createTime = evaluateQuery.getCreateTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime"))&&StringUtils.isNotNull(params.get("endCreateTime")),"create_time",params.get("beginCreateTime"),params.get("endCreateTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime")) && StringUtils.isNotNull(params.get("endCreateTime")), "create_time", params.get("beginCreateTime"), params.get("endCreateTime"));
 
         return queryWrapper;
     }
