@@ -9,6 +9,14 @@ export function listLecture(query) {
   })
 }
 
+export function listLectureHome(query) {
+  return request({
+    url: '/manage/lecture/list/home',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询讲座信息详细
 export function getLecture(id) {
   return request({

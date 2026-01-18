@@ -92,4 +92,6 @@ public interface ILectureService extends IService<Lecture> {
      * @return LectureVO集合
      */
     List<LectureVo> convertVoList(List<Lecture> lectureList);
+
+    List<Lecture> selectLectureListHome(Lecture lecture);
 }

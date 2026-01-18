@@ -101,6 +101,9 @@ public class LectureVo implements Serializable {
     private Date updateTime;
 
 
+    private Boolean isAppointment;
+
+
     /**
      * 对象转封装类
      *

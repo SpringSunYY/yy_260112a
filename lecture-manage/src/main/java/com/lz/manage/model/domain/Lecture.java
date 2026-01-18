@@ -34,10 +34,10 @@ public class Lecture implements Serializable {
     /**
      * 教室
      */
-    @Excel(name = "教室",type = Excel.Type.IMPORT)
+    @Excel(name = "教室", type = Excel.Type.IMPORT)
     private Long classroomId;
     @TableField(exist = false)
-    @Excel(name = "教室",type = Excel.Type.EXPORT)
+    @Excel(name = "教室", type = Excel.Type.EXPORT)
     private String classroomName;
 
     /**
@@ -49,10 +49,10 @@ public class Lecture implements Serializable {
     /**
      * 讲师
      */
-    @Excel(name = "讲师",type = Excel.Type.IMPORT)
+    @Excel(name = "讲师", type = Excel.Type.IMPORT)
     private Long teacherId;
     @TableField(exist = false)
-    @Excel(name = "讲师",type = Excel.Type.EXPORT)
+    @Excel(name = "讲师", type = Excel.Type.EXPORT)
     private String teacherName;
 
     /**
@@ -127,6 +127,12 @@ public class Lecture implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "更新时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date updateTime;
+
+    /**
+     * 是否预约
+     */
+    @TableField(exist = false)
+    private Boolean isAppointment;
 
     /**
      * 请求参数

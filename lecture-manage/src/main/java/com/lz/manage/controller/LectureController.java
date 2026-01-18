@@ -1,30 +1,25 @@
 package com.lz.manage.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.access.prepost.PreAuthorize;
-import javax.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import com.lz.common.annotation.Log;
 import com.lz.common.core.controller.BaseController;
 import com.lz.common.core.domain.AjaxResult;
-import com.lz.common.enums.BusinessType;
-import com.lz.manage.model.domain.Lecture;
-import com.lz.manage.model.vo.lecture.LectureVo;
-import com.lz.manage.model.dto.lecture.LectureQuery;
-import com.lz.manage.model.dto.lecture.LectureInsert;
-import com.lz.manage.model.dto.lecture.LectureEdit;
-import com.lz.manage.service.ILectureService;
-import com.lz.common.utils.poi.ExcelUtil;
 import com.lz.common.core.page.TableDataInfo;
+import com.lz.common.enums.BusinessType;
+import com.lz.common.utils.poi.ExcelUtil;
+import com.lz.manage.model.domain.Lecture;
+import com.lz.manage.model.dto.lecture.LectureEdit;
+import com.lz.manage.model.dto.lecture.LectureInsert;
+import com.lz.manage.model.dto.lecture.LectureQuery;
+import com.lz.manage.model.enums.LectureStatusEnum;
+import com.lz.manage.model.vo.lecture.LectureVo;
+import com.lz.manage.service.ILectureService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 讲座信息Controller
@@ -34,8 +29,7 @@ import com.lz.common.core.page.TableDataInfo;
  */
 @RestController
 @RequestMapping("/manage/lecture")
-public class LectureController extends BaseController
-{
+public class LectureController extends BaseController {
     @Resource
     private ILectureService lectureService;
 
@@ -44,12 +38,27 @@ public class LectureController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:lecture:list')")
     @GetMapping("/list")
-    public TableDataInfo list(LectureQuery lectureQuery)
-    {
+    public TableDataInfo list(LectureQuery lectureQuery) {
         Lecture lecture = LectureQuery.queryToObj(lectureQuery);
         startPage();
         List<Lecture> list = lectureService.selectLectureList(lecture);
-        List<LectureVo> listVo= list.stream().map(LectureVo::objToVo).collect(Collectors.toList());
+        List<LectureVo> listVo = list.stream().map(LectureVo::objToVo).collect(Collectors.toList());
+        TableDataInfo table = getDataTable(list);
+        table.setRows(listVo);
+        return table;
+    }
+
+    /**
+     * 查询讲座信息列表
+     */
+    @PreAuthorize("@ss.hasPermi('manage:lecture:list')")
+    @GetMapping("/list/home")
+    public TableDataInfo listHome(LectureQuery lectureQuery) {
+        Lecture lecture = LectureQuery.queryToObj(lectureQuery);
+        startPage();
+        lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_2.getValue());
+        List<Lecture> list = lectureService.selectLectureListHome(lecture);
+        List<LectureVo> listVo = list.stream().map(LectureVo::objToVo).collect(Collectors.toList());
         TableDataInfo table = getDataTable(list);
         table.setRows(listVo);
         return table;
@@ -61,8 +70,7 @@ public class LectureController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:lecture:export')")
     @Log(title = "讲座信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, LectureQuery lectureQuery)
-    {
+    public void export(HttpServletResponse response, LectureQuery lectureQuery) {
         Lecture lecture = LectureQuery.queryToObj(lectureQuery);
         List<Lecture> list = lectureService.selectLectureList(lecture);
         ExcelUtil<Lecture> util = new ExcelUtil<Lecture>(Lecture.class);
@@ -74,8 +82,7 @@ public class LectureController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:lecture:query')")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
-    {
+    public AjaxResult getInfo(@PathVariable("id") Long id) {
         Lecture lecture = lectureService.selectLectureById(id);
         return success(LectureVo.objToVo(lecture));
     }
@@ -86,8 +93,7 @@ public class LectureController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:lecture:add')")
     @Log(title = "讲座信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody LectureInsert lectureInsert)
-    {
+    public AjaxResult add(@RequestBody LectureInsert lectureInsert) {
         Lecture lecture = LectureInsert.insertToObj(lectureInsert);
         return toAjax(lectureService.insertLecture(lecture));
     }
@@ -98,8 +104,7 @@ public class LectureController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:lecture:edit')")
     @Log(title = "讲座信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody LectureEdit lectureEdit)
-    {
+    public AjaxResult edit(@RequestBody LectureEdit lectureEdit) {
         Lecture lecture = LectureEdit.editToObj(lectureEdit);
         return toAjax(lectureService.updateLecture(lecture));
     }
@@ -109,9 +114,8 @@ public class LectureController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:lecture:remove')")
     @Log(title = "讲座信息", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids)
-    {
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids) {
         return toAjax(lectureService.deleteLectureByIds(ids));
     }
 }

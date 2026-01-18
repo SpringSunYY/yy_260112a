@@ -28,9 +28,11 @@
           </div>
 
           <div class="info-item">
-              <span class="label">时间：</span>
-              <span class="value">{{ parseTime(lecture.lectureStartTime, '{y}-{m}-{d} {h}:{i}') }} - {{ parseTime(lecture.lectureEndTime, '{y}-{m}-{d} {h}:{i}') }}</span>
-            </div>
+            <span class="label">时间：</span>
+            <span class="value">{{
+                parseTime(lecture.lectureStartTime, '{y}-{m}-{d} {h}:{i}')
+              }} - {{ parseTime(lecture.lectureEndTime, '{y}-{m}-{d} {h}:{i}') }}</span>
+          </div>
           <div class="lecture-info-row">
             <div class="info-item">
               <span class="label">人数：</span>
@@ -82,8 +84,8 @@
 </template>
 
 <script>
-import { listLecture } from "@/api/manage/lecture";
-import { addAppointment } from "@/api/manage/appointment";
+import {listLecture, listLectureHome} from "@/api/manage/lecture";
+import {addAppointment} from "@/api/manage/appointment";
 
 export default {
   name: "Index",
@@ -131,7 +133,7 @@ export default {
     /** 查询讲座信息列表 */
     getList() {
       this.loading = true;
-      listLecture(this.queryParams).then(response => {
+      listLectureHome(this.queryParams).then(response => {
         if (this.queryParams.pageNum === 1) {
           this.lectureList = response.rows;
         } else {
@@ -168,15 +170,25 @@ export default {
         return;
       }
 
-      // 显示确认框
-      this.$confirm(`确定要预约讲座"${lecture.name}"吗？`, '预约确认', {
+      // 显示输入预约描述的提示框
+      this.$prompt(`请输入预约讲座"${lecture.name}"的描述`, '预约确认', {
         confirmButtonText: '确定预约',
         cancelButtonText: '取消',
-        type: 'info'
-      }).then(() => {
+        inputPattern: /\S/,
+        inputErrorMessage: '预约描述不能为空',
+        inputPlaceholder: '请填写您的预约理由或备注信息...',
+        inputType: 'textarea',
+        inputValidator: (value) => {
+          if (!value || value.trim() === '') {
+            return '预约描述不能为空';
+          }
+          return true;
+        }
+      }).then(({ value }) => {
         // 调用预约接口
         const appointmentData = {
           lectureId: lecture.id,
+          appointmentDescription: value.trim()
         };
 
         addAppointment(appointmentData).then(response => {

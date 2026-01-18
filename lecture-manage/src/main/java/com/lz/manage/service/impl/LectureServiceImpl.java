@@ -9,12 +9,14 @@ import com.lz.common.utils.SecurityUtils;
 import com.lz.common.utils.StringUtils;
 import com.lz.common.utils.ThrowUtils;
 import com.lz.manage.mapper.LectureMapper;
+import com.lz.manage.model.domain.Appointment;
 import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Lecture;
 import com.lz.manage.model.dto.lecture.LectureQuery;
 import com.lz.manage.model.enums.ClassroomStatusEnum;
 import com.lz.manage.model.enums.LectureStatusEnum;
 import com.lz.manage.model.vo.lecture.LectureVo;
+import com.lz.manage.service.IAppointmentService;
 import com.lz.manage.service.IClassroomService;
 import com.lz.manage.service.ILectureService;
 import com.lz.system.service.ISysUserService;
@@ -42,6 +44,9 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
     @Resource
     private IClassroomService classroomService;
 
+    @Resource
+    private IAppointmentService appointmentService;
+
     //region mybatis代码
 
     /**
@@ -65,19 +70,7 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
     public List<Lecture> selectLectureList(Lecture lecture) {
         List<Lecture> lectures = lectureMapper.selectLectureList(lecture);
         for (Lecture info : lectures) {
-            SysUser sysUser = sysUserService.selectUserById(info.getUserId());
-            if (StringUtils.isNotNull(sysUser)) {
-                info.setUserName(sysUser.getUserName());
-            }
-            Classroom classroom = classroomService.selectClassroomById(info.getClassroomId());
-            if (StringUtils.isNotNull(classroom)) {
-                info.setClassroomName(classroom.getName());
-            }
-            SysUser teacherUser = sysUserService.selectUserById(info.getTeacherId());
-            if (StringUtils.isNotNull(teacherUser)) {
-                info.setTeacherName(teacherUser.getUserName());
-            }
-
+            initLectureInfo(info);
         }
         return lectures;
     }
@@ -210,6 +203,34 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
             return Collections.emptyList();
         }
         return lectureList.stream().map(LectureVo::objToVo).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Lecture> selectLectureListHome(Lecture lecture) {
+        Long userId = SecurityUtils.getUserId();
+
+        List<Lecture> lectures = lectureMapper.selectLectureList(lecture);
+        for (Lecture info : lectures) {
+            initLectureInfo(info);
+            List<Appointment> appointmentList = appointmentService.selectAppointmentByUserAndLecture(userId, info.getId());
+            info.setIsAppointment(StringUtils.isNotEmpty(appointmentList));
+        }
+        return lectures;
+    }
+
+    private void initLectureInfo(Lecture info) {
+        SysUser sysUser = sysUserService.selectUserById(info.getUserId());
+        if (StringUtils.isNotNull(sysUser)) {
+            info.setUserName(sysUser.getUserName());
+        }
+        Classroom classroom = classroomService.selectClassroomById(info.getClassroomId());
+        if (StringUtils.isNotNull(classroom)) {
+            info.setClassroomName(classroom.getName());
+        }
+        SysUser teacherUser = sysUserService.selectUserById(info.getTeacherId());
+        if (StringUtils.isNotNull(teacherUser)) {
+            info.setTeacherName(teacherUser.getUserName());
+        }
     }
 
 }
