@@ -78,11 +78,13 @@
             <template #header>
               <div class="card-header">
                 <i class="el-icon-s-data"></i>
-                <span>{{  }}</span>
+                <span>{{ signStatisticsName }}</span>
               </div>
             </template>
             <div class="chart-container">
-              <PieRoseHollowCharts/>
+              <PieRoseHollowCharts
+                :chart-data="signStatisticsData"
+                :chart-title="signStatisticsName"/>
             </div>
           </el-card>
         </el-col>
@@ -95,7 +97,7 @@
 import {listLecture} from "@/api/manage/lecture";
 import PieRoseCharts from "@/components/Echarts/PieRoseCharts.vue";
 import PieRoseHollowCharts from "@/components/Echarts/PieRoseHollowCharts.vue";
-import {evaluateStatistics} from "@/api/manage/statistics";
+import {evaluateStatistics, signStatistics} from "@/api/manage/statistics";
 
 export default {
   name: "Statistics",
@@ -109,10 +111,9 @@ export default {
       // 讲座加载中
       lectureLoading: false,
       evaluateTotal: 0,
-      // 通过率
-      passedStatisticsData: 0,
-      // 通过率名称
-      passedStatisticsName: '通过率'
+      //签到
+      signStatisticsData: [],
+      signStatisticsName: "签到分析"
     }
   },
   created() {
@@ -122,6 +123,13 @@ export default {
   methods: {
     getStatistics() {
       this.getEvaluateTotal()
+      this.getSignStatistics()
+    },
+    //签到
+    getSignStatistics() {
+      signStatistics(this.query).then(res => {
+        this.signStatisticsData = res.data
+      })
     },
     //获取评论总数
     getEvaluateTotal() {

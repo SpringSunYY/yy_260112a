@@ -33,4 +33,13 @@ public class StatisticsController extends BaseController {
     public AjaxResult evaluateStatistics(StatisticsRequest request){
         return success(statisticsService.evaluateStatistics(request));
     }
+
+    /**
+     * 签到数
+     */
+    @GetMapping("/sign")
+    @PreAuthorize("@ss.hasPermi('manage:statistics')")
+    public AjaxResult signStatistics(StatisticsRequest request){
+        return success(statisticsService.signStatistics(request));
+    }
 }

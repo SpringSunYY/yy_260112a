@@ -179,7 +179,7 @@
           <router-link class="link-type"
                        :to="{name:'Appointment', query:{lectureId:scope.row.id}}">
             {{
-              scope.row.name
+              scope.row.peopleJoinNumber
             }}
           </router-link>
         </template>
@@ -190,7 +190,7 @@
           <router-link class="link-type"
                        :to="{name:'Sign', query:{lectureId:scope.row.id}}">
             {{
-              scope.row.name
+              scope.row.peopleSignNumber
             }}
           </router-link>
         </template>

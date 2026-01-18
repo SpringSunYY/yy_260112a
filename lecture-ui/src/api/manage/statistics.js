@@ -8,3 +8,12 @@ export function evaluateStatistics(query) {
     params: query
   })
 }
+
+//签到人数
+export function signStatistics(query) {
+  return request({
+    url: '/manage/statistics/sign',
+    method: 'get',
+    params: query
+  })
+}
