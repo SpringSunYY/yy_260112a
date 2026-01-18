@@ -293,6 +293,7 @@ export default {
   dicts: ['appointment_status'],
   data() {
     return {
+      lectureId: null,
       //打开签到
       openSign: false,
       //打开审核
@@ -380,7 +381,19 @@ export default {
     };
   },
   created() {
+    this.lectureId = this.$route.query && this.$route.query.lectureId;
+    this.queryParams.lectureId = this.lectureId;
     this.getList();
+  },
+  watch: {
+    // 监听路由
+    $route(to, from) {
+      this.lectureId = to.query.lectureId;
+      this.queryParams.lectureId = this.lectureId;
+      if (this.lectureId) {
+        this.getList();
+      }
+    }
   },
   methods: {
     //签到
@@ -443,7 +456,7 @@ export default {
       this.form = {
         id: null,
         classroomId: null,
-        lectureId: null,
+        lectureId: this.lectureId,
         teacherId: null,
         appointmentDescription: null,
         status: null,

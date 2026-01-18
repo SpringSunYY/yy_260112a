@@ -149,7 +149,16 @@
       <el-table-column label="编号" align="center" v-if="columns[0].visible" prop="id"/>
       <el-table-column label="教室" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible"
                        prop="classroomName"/>
-      <el-table-column label="名称" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="name"/>
+      <el-table-column label="名称" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="name">
+        <template slot-scope="scope">
+          <router-link class="link-type"
+                       :to="{name:'Appointment', query:{lectureId:scope.row.id}}">
+            {{
+              scope.row.name
+            }}
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="讲师" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible"
                        prop="teacherName"/>
       <el-table-column label="人数" :show-overflow-tooltip="true" align="center" v-if="columns[4].visible"
@@ -191,6 +200,14 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-edit"
+            @click="handleViewSign(scope.row)"
+            v-hasPermi="['manage:sign:query']"
+          >查看签到
+          </el-button>
           <el-button
             size="mini"
             type="text"
@@ -470,6 +487,15 @@ export default {
     this.getTeacherList();
   },
   methods: {
+    //查看签到
+    handleViewSign(row) {
+      this.$router.push({
+        name: 'Sign',
+        query: {
+          lectureId: row.id
+        }
+      })
+    },
     //审核
     handleAudit(row) {
       this.reset()
