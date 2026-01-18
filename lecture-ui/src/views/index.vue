@@ -5,6 +5,19 @@
       <h1 class="page-title">高校讲座预约系统</h1>
     </div>
 
+    <!-- 搜索框 -->
+    <div class="search-container">
+      <el-input
+        v-model="searchName"
+        placeholder="请输入讲座名称进行搜索"
+        clearable
+        @input="handleSearch"
+        style="width: 400px;"
+        prefix-icon="el-icon-search">
+        <el-button slot="append" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+      </el-input>
+    </div>
+
     <!-- 讲座卡片列表 -->
     <div class="lecture-list" v-loading="loading" ref="scrollContainer">
       <div class="lecture-card" v-for="lecture in lectureList" :key="lecture.id">
@@ -66,25 +79,11 @@
       </div>
     </div>
 
-    <!-- 讲座详情对话框 -->
-    <el-dialog title="讲座描述" :visible.sync="detailVisible" width="600px" append-to-body>
-      <div class="detail-description" v-if="currentLecture.description">
-        <div class="ql-container ql-snow">
-          <div class="ql-editor" v-html="currentLecture.description"/>
-        </div>
-      </div>
-      <div v-else class="no-description">
-        暂无描述信息
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="detailVisible = false">关 闭</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import {listLecture, listLectureHome} from "@/api/manage/lecture";
+import {listLectureHome} from "@/api/manage/lecture";
 import {addAppointment} from "@/api/manage/appointment";
 
 export default {
@@ -101,15 +100,14 @@ export default {
         pageNum: 1,
         pageSize: 20,
         status: '2', // 默认只显示审核通过的讲座
+        name: '' // 讲座名称搜索
       },
       // 是否还有更多数据
       noMore: false,
       // 总条数
       total: 0,
-      // 详情对话框
-      detailVisible: false,
-      // 当前查看的讲座
-      currentLecture: {}
+      // 搜索名称
+      searchName: ''
     };
   },
   created() {
@@ -147,6 +145,17 @@ export default {
       });
     },
 
+    /** 处理搜索 */
+    handleSearch() {
+      // 更新查询参数中的name字段
+      this.queryParams.name = this.searchName.trim();
+      // 重置分页参数
+      this.queryParams.pageNum = 1;
+      this.noMore = false;
+      // 重新获取列表
+      this.getList();
+    },
+
     /** 加载更多 */
     loadMore() {
       if (this.loading || this.noMore) {
@@ -158,8 +167,12 @@ export default {
 
     /** 查看详情 */
     viewDetail(lecture) {
-      this.currentLecture = lecture;
-      this.detailVisible = true;
+      this.$router.push({
+        name: 'LectureDetail',
+        query: {
+          lectureId: lecture.id
+        }
+      })
     },
 
     /** 预约 */
@@ -251,6 +264,14 @@ export default {
   font-weight: 600;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.search-container {
+  max-width: 95%;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .lecture-list {
@@ -456,7 +477,6 @@ export default {
   .page-title {
     font-size: 20px;
   }
-
 
   .card-header,
   .card-content {

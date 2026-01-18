@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lz.manage.mapper.LectureMapper">
-    
+
     <resultMap type="Lecture" id="LectureResult">
         <result property="id"    column="id"    />
         <result property="classroomId"    column="classroom_id"    />
@@ -28,18 +28,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectLectureList" parameterType="Lecture" resultMap="LectureResult">
         <include refid="selectLectureVo"/>
-        <where>  
-            <if test="id != null "> and id = #{id}</if>
-            <if test="classroomId != null "> and classroom_id = #{classroomId}</if>
-            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
-            <if test="teacherId != null "> and teacher_id = #{teacherId}</if>
-            <if test="params.beginLectureStartTime != null and params.beginLectureStartTime != '' and params.endLectureStartTime != null and params.endLectureStartTime != ''"> and DATE_FORMAT(lecture_start_time, '%Y-%m-%d') between #{params.beginLectureStartTime} and #{params.endLectureStartTime}</if>
-            <if test="status != null  and status != ''"> and status = #{status}</if>
-            <if test="userId != null "> and user_id = #{userId}</if>
-            <if test="createTime != null "> and create_time = #{createTime}</if>
+        <where>
+            <if test="id != null ">and id = #{id}</if>
+            <if test="classroomId != null ">and classroom_id = #{classroomId}</if>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="teacherId != null ">and teacher_id = #{teacherId}</if>
+            <if test="params.beginLectureStartTime != null and params.beginLectureStartTime != '' and params.endLectureStartTime != null and params.endLectureStartTime != ''">
+                and DATE_FORMAT(lecture_start_time, '%Y-%m-%d') between #{params.beginLectureStartTime} and
+                #{params.endLectureStartTime}
+            </if>
+            <if test="status != null  and status != ''">and status = #{status}</if>
+            <if test="noStatues != null and noStatues.size >0">
+                and status not in
+                <foreach collection="noStatues" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="createTime != null ">and create_time = #{createTime}</if>
         </where>
     </select>
-    
+
     <select id="selectLectureById" parameterType="Long" resultMap="LectureResult">
         <include refid="selectLectureVo"/>
         where id = #{id}
@@ -107,7 +117,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteLectureByIds" parameterType="String">
-        delete from tb_lecture where id in 
+        delete from tb_lecture where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

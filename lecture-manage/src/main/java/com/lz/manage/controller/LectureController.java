@@ -1,25 +1,35 @@
 package com.lz.manage.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
+
+import com.lz.manage.model.enums.LectureStatusEnum;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import javax.annotation.Resource;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.lz.common.annotation.Log;
 import com.lz.common.core.controller.BaseController;
 import com.lz.common.core.domain.AjaxResult;
-import com.lz.common.core.page.TableDataInfo;
 import com.lz.common.enums.BusinessType;
-import com.lz.common.utils.poi.ExcelUtil;
 import com.lz.manage.model.domain.Lecture;
-import com.lz.manage.model.dto.lecture.LectureEdit;
-import com.lz.manage.model.dto.lecture.LectureInsert;
-import com.lz.manage.model.dto.lecture.LectureQuery;
-import com.lz.manage.model.enums.LectureStatusEnum;
 import com.lz.manage.model.vo.lecture.LectureVo;
+import com.lz.manage.model.dto.lecture.LectureQuery;
+import com.lz.manage.model.dto.lecture.LectureInsert;
+import com.lz.manage.model.dto.lecture.LectureEdit;
 import com.lz.manage.service.ILectureService;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.lz.common.utils.poi.ExcelUtil;
+import com.lz.common.core.page.TableDataInfo;
 
 /**
  * 讲座信息Controller
@@ -56,7 +66,10 @@ public class LectureController extends BaseController {
     public TableDataInfo listHome(LectureQuery lectureQuery) {
         Lecture lecture = LectureQuery.queryToObj(lectureQuery);
         startPage();
-        lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_2.getValue());
+        ArrayList<String> noStatues = new ArrayList<>();
+        noStatues.add(LectureStatusEnum.LECTURE_STATUS_1.getValue());
+        noStatues.add(LectureStatusEnum.LECTURE_STATUS_5.getValue());
+        lecture.setNoStatues(noStatues);
         List<Lecture> list = lectureService.selectLectureListHome(lecture);
         List<LectureVo> listVo = list.stream().map(LectureVo::objToVo).collect(Collectors.toList());
         TableDataInfo table = getDataTable(list);

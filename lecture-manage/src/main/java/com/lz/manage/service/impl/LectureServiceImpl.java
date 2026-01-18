@@ -57,7 +57,16 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      */
     @Override
     public Lecture selectLectureById(Long id) {
-        return lectureMapper.selectLectureById(id);
+        Lecture lecture = lectureMapper.selectLectureById(id);
+        Classroom classroom = classroomService.selectClassroomById(lecture.getClassroomId());
+        if (StringUtils.isNotNull(classroom)) {
+            lecture.setClassroomName(classroom.getName());
+        }
+        SysUser teacherUser = sysUserService.selectUserById(lecture.getTeacherId());
+        if (StringUtils.isNotNull(teacherUser)) {
+            lecture.setTeacherName(teacherUser.getUserName());
+        }
+        return lecture;
     }
 
     /**

@@ -11,6 +11,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -92,6 +93,9 @@ public class Lecture implements Serializable {
      */
     @Excel(name = "状态", dictType = "lecture_status")
     private String status;
+
+    @TableField(exist = false)
+    private List<String> noStatues;
 
     /**
      * 讲座描述
