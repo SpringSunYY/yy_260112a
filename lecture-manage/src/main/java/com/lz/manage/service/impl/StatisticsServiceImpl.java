@@ -5,6 +5,7 @@ import com.lz.common.utils.SecurityUtils;
 import com.lz.common.utils.StringUtils;
 import com.lz.manage.model.domain.Appointment;
 import com.lz.manage.model.domain.Evaluate;
+import com.lz.manage.model.domain.Lecture;
 import com.lz.manage.model.domain.Sign;
 import com.lz.manage.model.statistics.dto.StatisticsRequest;
 import com.lz.manage.model.statistics.vo.PieStatisticsVo;
@@ -81,5 +82,36 @@ public class StatisticsServiceImpl implements IStatisticsService {
         pieStatisticsVos.add(pieStatisticsVo);
         pieStatisticsVos.add(pieStatisticsVo1);
         return pieStatisticsVos;
+    }
+
+    @Override
+    public List<PieStatisticsVo> appointmentStatistics(StatisticsRequest request) {
+        if (SecurityUtils.hasRole("teacher") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            request.setTeacherId(SecurityUtils.getUserId());
+        }
+        LambdaQueryWrapper<Appointment> queryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Lecture> lectureWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.isNotNull(request.getTeacherId())) {
+            lectureWrapper.eq(Lecture::getTeacherId, request.getTeacherId());
+            queryWrapper.eq(Appointment::getTeacherId, request.getTeacherId());
+        }
+        if (StringUtils.isNotNull(request.getLectureId())) {
+            lectureWrapper.eq(Lecture::getId, request.getLectureId());
+            queryWrapper.eq(Appointment::getLectureId, request.getLectureId());
+        }
+        Long appointmentCount = appointmentService.count(queryWrapper);
+        List<Lecture> lectures = lectureService.list(lectureWrapper);
+        Long count = lectures.stream().mapToLong(Lecture::getPeopleNumberLimit).sum();
+        PieStatisticsVo pieStatisticsVo = new PieStatisticsVo();
+        pieStatisticsVo.setName("参加人数");
+        pieStatisticsVo.setValue(appointmentCount);
+        PieStatisticsVo pieStatisticsVo1 = new PieStatisticsVo();
+        pieStatisticsVo1.setName("空位数");
+        pieStatisticsVo1.setValue(count-appointmentCount);
+        ArrayList<PieStatisticsVo> pieStatisticsVos = new ArrayList<>();
+        pieStatisticsVos.add(pieStatisticsVo);
+        pieStatisticsVos.add(pieStatisticsVo1);
+        return pieStatisticsVos;
+
     }
 }

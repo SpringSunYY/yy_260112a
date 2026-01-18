@@ -17,3 +17,12 @@ export function signStatistics(query) {
     params: query
   })
 }
+
+//预约人数
+export function appointmentStatistics(query) {
+  return request({
+    url: '/manage/statistics/appointment',
+    method: 'get',
+    params: query
+  })
+}

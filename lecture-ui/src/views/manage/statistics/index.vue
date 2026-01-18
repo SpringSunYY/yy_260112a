@@ -65,11 +65,14 @@
             <template #header>
               <div class="card-header">
                 <i class="el-icon-pie-chart"></i>
-                <span>{{  }}</span>
+                <span>{{  appointmentStatisticsName}}</span>
               </div>
             </template>
             <div class="chart-container">
-              <PieRoseCharts/>
+              <PieRoseCharts
+              :chart-title="appointmentStatisticsName"
+              :chart-data="appointmentStatisticsData"
+              />
             </div>
           </el-card>
         </el-col>
@@ -97,7 +100,7 @@
 import {listLecture} from "@/api/manage/lecture";
 import PieRoseCharts from "@/components/Echarts/PieRoseCharts.vue";
 import PieRoseHollowCharts from "@/components/Echarts/PieRoseHollowCharts.vue";
-import {evaluateStatistics, signStatistics} from "@/api/manage/statistics";
+import {appointmentStatistics, evaluateStatistics, signStatistics} from "@/api/manage/statistics";
 
 export default {
   name: "Statistics",
@@ -113,7 +116,10 @@ export default {
       evaluateTotal: 0,
       //签到
       signStatisticsData: [],
-      signStatisticsName: "签到分析"
+      signStatisticsName: "签到分析",
+      //预约
+      appointmentStatisticsData: [],
+      appointmentStatisticsName: "预约分析",
     }
   },
   created() {
@@ -124,6 +130,13 @@ export default {
     getStatistics() {
       this.getEvaluateTotal()
       this.getSignStatistics()
+      this.getAppointmentStatistics()
+    },
+    //预约
+    getAppointmentStatistics() {
+      appointmentStatistics(this.query).then(res => {
+        this.appointmentStatisticsData = res.data
+      })
     },
     //签到
     getSignStatistics() {

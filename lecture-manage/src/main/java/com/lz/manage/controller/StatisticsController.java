@@ -42,4 +42,13 @@ public class StatisticsController extends BaseController {
     public AjaxResult signStatistics(StatisticsRequest request){
         return success(statisticsService.signStatistics(request));
     }
+
+    /**
+     * 预约数
+     */
+    @GetMapping("/appointment")
+    @PreAuthorize("@ss.hasPermi('manage:statistics')")
+    public AjaxResult appointmentStatistics(StatisticsRequest request){
+        return success(statisticsService.appointmentStatistics(request));
+    }
 }

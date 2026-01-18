@@ -9,4 +9,6 @@ public interface IStatisticsService {
     Long evaluateStatistics(StatisticsRequest request);
 
     List<PieStatisticsVo> signStatistics(StatisticsRequest request);
+
+    List<PieStatisticsVo> appointmentStatistics(StatisticsRequest request);
 }
