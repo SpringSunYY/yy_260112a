@@ -55,6 +55,18 @@ public class EvaluateController extends BaseController
         return table;
     }
 
+    @PreAuthorize("@ss.hasPermi('manage:evaluate:list')")
+    @GetMapping("/list/detail")
+    public TableDataInfo listDetail(EvaluateQuery evaluateQuery) {
+        Evaluate evaluate = EvaluateQuery.queryToObj(evaluateQuery);
+        startPage();
+        List<Evaluate> list = evaluateService.selectEvaluateListByDetail(evaluate);
+        List<EvaluateVo> listVo = list.stream().map(EvaluateVo::objToVo).collect(Collectors.toList());
+        TableDataInfo table = getDataTable(list);
+        table.setRows(listVo);
+        return table;
+    }
+
     /**
      * 导出评价信息列表
      */

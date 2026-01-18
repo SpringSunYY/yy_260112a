@@ -175,7 +175,7 @@
 
 <script>
 import {getLecture} from "@/api/manage/lecture";
-import {listEvaluate, addEvaluate} from "@/api/manage/evaluate";
+import {addEvaluate, listEvaluateByDetail} from "@/api/manage/evaluate";
 
 export default {
   name: "LectureDetail",
@@ -254,7 +254,7 @@ export default {
     // 获取评价列表
     getEvaluateList() {
       this.evaluateLoading = true;
-      listEvaluate(this.queryParams).then(response => {
+      listEvaluateByDetail(this.queryParams).then(response => {
         // 确保评分字段为数字类型
         this.evaluateList = response.rows.map(item => ({
           ...item,

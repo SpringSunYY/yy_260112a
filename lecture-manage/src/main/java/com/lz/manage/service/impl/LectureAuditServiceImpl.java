@@ -74,6 +74,10 @@ public class LectureAuditServiceImpl extends ServiceImpl<LectureAuditMapper, Lec
      */
     @Override
     public List<LectureAudit> selectLectureAuditList(LectureAudit lectureAudit) {
+        //如果是老师只可以查看自己
+        if (SecurityUtils.hasRole("teacher") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            lectureAudit.setTeacherId(SecurityUtils.getUserId());
+        }
         List<LectureAudit> lectureAudits = lectureAuditMapper.selectLectureAuditList(lectureAudit);
         for (LectureAudit info : lectureAudits) {
             SysUser sysUser = sysUserService.selectUserById(info.getUserId());

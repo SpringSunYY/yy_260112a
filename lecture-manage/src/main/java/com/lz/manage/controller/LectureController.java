@@ -61,7 +61,7 @@ public class LectureController extends BaseController {
     /**
      * 查询讲座信息列表
      */
-    @PreAuthorize("@ss.hasPermi('manage:lecture:list')")
+    @PreAuthorize("@ss.hasAnyPermi('manage:lecture:list,manage:lecture:query')")
     @GetMapping("/list/home")
     public TableDataInfo listHome(LectureQuery lectureQuery) {
         Lecture lecture = LectureQuery.queryToObj(lectureQuery);

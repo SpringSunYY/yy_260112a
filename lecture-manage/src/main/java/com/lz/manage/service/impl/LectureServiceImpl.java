@@ -77,6 +77,14 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
      */
     @Override
     public List<Lecture> selectLectureList(Lecture lecture) {
+        //如果是老师只可以查看自己
+        if (SecurityUtils.hasRole("teacher") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            lecture.setTeacherId(SecurityUtils.getUserId());
+        }
+        //如果是学生
+        if (SecurityUtils.hasRole("student")&& !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            lecture.setUserId(SecurityUtils.getUserId());
+        }
         List<Lecture> lectures = lectureMapper.selectLectureList(lecture);
         for (Lecture info : lectures) {
             initLectureInfo(info);

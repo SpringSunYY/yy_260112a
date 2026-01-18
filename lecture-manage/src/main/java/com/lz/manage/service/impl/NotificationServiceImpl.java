@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lz.common.core.domain.entity.SysUser;
 import com.lz.common.utils.DateUtils;
+import com.lz.common.utils.SecurityUtils;
 import com.lz.common.utils.StringUtils;
 import com.lz.manage.mapper.NotificationMapper;
 import com.lz.manage.model.domain.Notification;
 import com.lz.manage.model.dto.notification.NotificationQuery;
+import com.lz.manage.model.enums.IsReadEnum;
 import com.lz.manage.model.vo.notification.NotificationVo;
 import com.lz.manage.service.INotificationService;
 import com.lz.system.service.ISysUserService;
@@ -53,6 +55,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      */
     @Override
     public List<Notification> selectNotificationList(Notification notification) {
+        if (!SecurityUtils.isAdmin(SecurityUtils.getUserId()) && !SecurityUtils.hasRole("manage")) {
+            notification.setUserId(SecurityUtils.getUserId());
+        }
         List<Notification> notifications = notificationMapper.selectNotificationList(notification);
         for (Notification info : notifications) {
             SysUser sysUser = sysUserService.selectUserById(info.getUserId());
@@ -83,6 +88,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      */
     @Override
     public int updateNotification(Notification notification) {
+        //如果是已读
+        if (notification.getReadFlag().equals(IsReadEnum.IS_READ_1.getValue())) {
+            notification.setReadTime(DateUtils.getNowDate());
+        }
         return notificationMapper.updateNotification(notification);
     }
 

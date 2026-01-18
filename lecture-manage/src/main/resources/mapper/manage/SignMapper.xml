@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lz.manage.mapper.SignMapper">
-    
+
     <resultMap type="Sign" id="SignResult">
         <result property="id"    column="id"    />
         <result property="classroomId"    column="classroom_id"    />
@@ -22,7 +22,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectSignList" parameterType="Sign" resultMap="SignResult">
         <include refid="selectSignVo"/>
-        <where>  
+        <where>
             <if test="id != null "> and id = #{id}</if>
             <if test="classroomId != null "> and classroom_id = #{classroomId}</if>
             <if test="lectureId != null "> and lecture_id = #{lectureId}</if>
@@ -31,8 +31,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="params.beginCreateTime != null and params.beginCreateTime != '' and params.endCreateTime != null and params.endCreateTime != ''"> and DATE_FORMAT(create_time, '%Y-%m-%d') between #{params.beginCreateTime} and #{params.endCreateTime}</if>
         </where>
+        order by create_time desc
     </select>
-    
+
     <select id="selectSignById" parameterType="Long" resultMap="SignResult">
         <include refid="selectSignVo"/>
         where id = #{id}
@@ -82,7 +83,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteSignByIds" parameterType="String">
-        delete from tb_sign where id in 
+        delete from tb_sign where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

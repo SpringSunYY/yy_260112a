@@ -180,7 +180,7 @@ export const dynamicRoutes = [
     path: '/manage/lecture',
     component: Layout,
     hidden: true,
-    permissions: ['manage:lecture:list'],
+    permissions: ['manage:lecture:query'],
     children: [
       {
         path: 'detail',

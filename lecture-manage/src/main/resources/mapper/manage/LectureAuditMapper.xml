@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lz.manage.mapper.LectureAuditMapper">
-    
+
     <resultMap type="LectureAudit" id="LectureAuditResult">
         <result property="id"    column="id"    />
         <result property="classroomId"    column="classroom_id"    />
@@ -23,17 +23,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectLectureAuditList" parameterType="LectureAudit" resultMap="LectureAuditResult">
         <include refid="selectLectureAuditVo"/>
-        <where>  
-            <if test="id != null "> and id = #{id}</if>
-            <if test="classroomId != null "> and classroom_id = #{classroomId}</if>
-            <if test="lectureId != null "> and lecture_id = #{lectureId}</if>
-            <if test="teacherId != null "> and teacher_id = #{teacherId}</if>
-            <if test="status != null  and status != ''"> and status = #{status}</if>
-            <if test="userId != null "> and user_id = #{userId}</if>
-            <if test="params.beginCreateTime != null and params.beginCreateTime != '' and params.endCreateTime != null and params.endCreateTime != ''"> and DATE_FORMAT(create_time, '%Y-%m-%d') between #{params.beginCreateTime} and #{params.endCreateTime}</if>
+        <where>
+            <if test="id != null ">and id = #{id}</if>
+            <if test="classroomId != null ">and classroom_id = #{classroomId}</if>
+            <if test="lectureId != null ">and lecture_id = #{lectureId}</if>
+            <if test="teacherId != null ">and teacher_id = #{teacherId}</if>
+            <if test="status != null  and status != ''">and status = #{status}</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="params.beginCreateTime != null and params.beginCreateTime != '' and params.endCreateTime != null and params.endCreateTime != ''">
+                and DATE_FORMAT(create_time, '%Y-%m-%d') between #{params.beginCreateTime} and #{params.endCreateTime}
+            </if>
         </where>
+        order by create_time desc
     </select>
-    
+
     <select id="selectLectureAuditById" parameterType="Long" resultMap="LectureAuditResult">
         <include refid="selectLectureAuditVo"/>
         where id = #{id}
@@ -86,7 +89,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteLectureAuditByIds" parameterType="String">
-        delete from tb_lecture_audit where id in 
+        delete from tb_lecture_audit where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

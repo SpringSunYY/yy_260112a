@@ -75,6 +75,14 @@ public class SignServiceImpl extends ServiceImpl<SignMapper, Sign> implements IS
      */
     @Override
     public List<Sign> selectSignList(Sign sign) {
+        //如果是老师只可以查看自己
+        if (SecurityUtils.hasRole("teacher") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            sign.setTeacherId(SecurityUtils.getUserId());
+        }
+        //如果是学生
+        if (SecurityUtils.hasRole("student") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            sign.setUserId(SecurityUtils.getUserId());
+        }
         List<Sign> signs = signMapper.selectSignList(sign);
         for (Sign info : signs) {
             SysUser sysUser = sysUserService.selectUserById(info.getUserId());

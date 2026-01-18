@@ -73,6 +73,18 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
      */
     @Override
     public List<Evaluate> selectEvaluateList(Evaluate evaluate) {
+        if (!SecurityUtils.isAdmin(SecurityUtils.getUserId()) && !SecurityUtils.hasRole("manage")) {
+            evaluate.setUserId(SecurityUtils.getUserId());
+        }
+        return getEvaluates(evaluate);
+    }
+
+    @Override
+    public List<Evaluate> selectEvaluateListByDetail(Evaluate evaluate) {
+        return getEvaluates(evaluate);
+    }
+
+    private List<Evaluate> getEvaluates(Evaluate evaluate) {
         List<Evaluate> evaluates = evaluateMapper.selectEvaluateList(evaluate);
         for (Evaluate info : evaluates) {
             SysUser sysUser = sysUserService.selectUserById(info.getUserId());

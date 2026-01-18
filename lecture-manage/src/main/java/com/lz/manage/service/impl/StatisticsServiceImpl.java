@@ -65,7 +65,7 @@ public class StatisticsServiceImpl implements IStatisticsService {
             appointmentWrapper.eq(Appointment::getTeacherId, request.getTeacherId());
         }
         if (StringUtils.isNotNull(request.getLectureId())) {
-            signWrapper.eq(Sign::getId, request.getLectureId());
+            signWrapper.eq(Sign::getLectureId, request.getLectureId());
             appointmentWrapper.eq(Appointment::getLectureId, request.getLectureId());
         }
         Long signCount = signService.count(signWrapper);

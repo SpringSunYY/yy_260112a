@@ -51,7 +51,7 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
 
     @Resource
     private IClassroomService classroomService;
-    
+
     @Resource
     private INotificationService notificationService;
     //region mybatis代码
@@ -75,6 +75,14 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
      */
     @Override
     public List<Appointment> selectAppointmentList(Appointment appointment) {
+        //如果是老师只可以查看自己
+        if (SecurityUtils.hasRole("teacher") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            appointment.setTeacherId(SecurityUtils.getUserId());
+        }
+        //如果是学生
+        if (SecurityUtils.hasRole("student") && !SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            appointment.setUserId(SecurityUtils.getUserId());
+        }
         List<Appointment> appointments = appointmentMapper.selectAppointmentList(appointment);
         for (Appointment info : appointments) {
             SysUser sysUser = sysUserService.selectUserById(info.getUserId());
@@ -158,7 +166,7 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
 
         //发送消息
         Notification notification = new Notification();
-        notification.setUserId(appointment.getUserId());
+        notification.setUserId(appointmentDb.getUserId());
         notification.setTitle("您有新的审核信息");
         notification.setContent(StringUtils.format("您有新的审核信息，请及时处理"));
         notification.setReadFlag(IsReadEnum.IS_READ_2.getValue());

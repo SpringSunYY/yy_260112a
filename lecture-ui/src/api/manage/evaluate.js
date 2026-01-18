@@ -9,6 +9,14 @@ export function listEvaluate(query) {
   })
 }
 
+export function listEvaluateByDetail(query) {
+  return request({
+    url: '/manage/evaluate/list/detail',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询评价信息详细
 export function getEvaluate(id) {
   return request({

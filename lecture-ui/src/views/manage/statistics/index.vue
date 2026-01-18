@@ -5,7 +5,7 @@
       <template #header>
         <div class="card-header">
           <i class="el-icon-search"></i>
-          <span>课程查询</span>
+          <span>讲座查询</span>
         </div>
       </template>
       <div class="search-form">
