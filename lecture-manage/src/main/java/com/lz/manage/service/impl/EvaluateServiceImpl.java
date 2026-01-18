@@ -11,11 +11,14 @@ import com.lz.manage.mapper.EvaluateMapper;
 import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Evaluate;
 import com.lz.manage.model.domain.Lecture;
+import com.lz.manage.model.domain.Notification;
 import com.lz.manage.model.dto.evaluate.EvaluateQuery;
+import com.lz.manage.model.enums.IsReadEnum;
 import com.lz.manage.model.vo.evaluate.EvaluateVo;
 import com.lz.manage.service.IClassroomService;
 import com.lz.manage.service.IEvaluateService;
 import com.lz.manage.service.ILectureService;
+import com.lz.manage.service.INotificationService;
 import com.lz.system.service.ISysUserService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -45,6 +48,9 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
 
     @Resource
     private IClassroomService classroomService;
+
+    @Resource
+    private INotificationService notificationService;
 
     //region mybatis代码
 
@@ -104,6 +110,15 @@ public class EvaluateServiceImpl extends ServiceImpl<EvaluateMapper, Evaluate> i
         evaluate.setTeacherId(lecture.getTeacherId());
         evaluate.setUserId(SecurityUtils.getUserId());
         evaluate.setCreateTime(DateUtils.getNowDate());
+
+        //发送消息
+        Notification notification = new Notification();
+        notification.setUserId(lecture.getTeacherId());
+        notification.setTitle("您的讲座有新的评论信息");
+        notification.setContent(StringUtils.format("您有新的评论信息，您的：{}有新的评论信息，请及时处理", lecture.getName()));
+        notification.setReadFlag(IsReadEnum.IS_READ_2.getValue());
+        notificationService.insertNotification(notification);
+
         return evaluateMapper.insertEvaluate(evaluate);
     }
 

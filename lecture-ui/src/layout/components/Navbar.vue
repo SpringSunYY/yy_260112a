@@ -9,14 +9,6 @@
       <template v-if="device!=='mobile'">
         <search id="header-search" class="right-menu-item" />
 
-        <el-tooltip content="源码地址" effect="dark" placement="bottom">
-          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
-        <el-tooltip content="文档地址" effect="dark" placement="bottom">
-          <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
         <el-tooltip content="布局大小" effect="dark" placement="bottom">
@@ -56,6 +48,7 @@ import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
 import RuoYiGit from '@/components/RuoYi/Git'
 import RuoYiDoc from '@/components/RuoYi/Doc'
+import {listNotification, updateNotification} from "@/api/manage/notification";
 
 export default {
   components: {
@@ -67,6 +60,17 @@ export default {
     Search,
     RuoYiGit,
     RuoYiDoc
+  },
+  data() {
+    return {
+      notificationList: [],
+      notificationQuery: {
+        pageNum: 1,
+        pageSize: 5,
+        userId: this.$store.state.user.id,
+        readFlag: '0'
+      }
+    }
   },
   computed: {
     ...mapGetters([
@@ -92,6 +96,23 @@ export default {
     }
   },
   methods: {
+    //获取通知信息
+    getNotificationList() {
+      const h = this.$createElement;
+      listNotification(this.notificationQuery).then(response => {
+        this.notificationList = response.rows;
+        this.notificationList.forEach(item => {
+          this.$notify({
+            title: item.title,
+            message: h('i', {style: 'color: teal'}, item.content),
+            onClose: () => {
+              item.readFlag = '1';
+              updateNotification(item)
+            }
+          });
+        })
+      })
+    },
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },

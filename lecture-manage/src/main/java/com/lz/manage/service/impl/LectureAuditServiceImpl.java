@@ -11,13 +11,16 @@ import com.lz.manage.mapper.LectureAuditMapper;
 import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Lecture;
 import com.lz.manage.model.domain.LectureAudit;
+import com.lz.manage.model.domain.Notification;
 import com.lz.manage.model.dto.lectureAudit.LectureAuditQuery;
 import com.lz.manage.model.enums.AuditStatusEnum;
+import com.lz.manage.model.enums.IsReadEnum;
 import com.lz.manage.model.enums.LectureStatusEnum;
 import com.lz.manage.model.vo.lectureAudit.LectureAuditVo;
 import com.lz.manage.service.IClassroomService;
 import com.lz.manage.service.ILectureAuditService;
 import com.lz.manage.service.ILectureService;
+import com.lz.manage.service.INotificationService;
 import com.lz.system.service.ISysUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +50,9 @@ public class LectureAuditServiceImpl extends ServiceImpl<LectureAuditMapper, Lec
 
     @Resource
     private IClassroomService classroomService;
+
+    @Resource
+    private INotificationService notificationService;
     //region mybatis代码
 
     /**
@@ -122,6 +128,15 @@ public class LectureAuditServiceImpl extends ServiceImpl<LectureAuditMapper, Lec
         lectureAudit.setPeopleNumberLimit(lecture.getPeopleNumberLimit());
         lectureAudit.setUserId(SecurityUtils.getUserId());
         lectureAudit.setCreateTime(DateUtils.getNowDate());
+
+        //发送消息
+        Notification notification = new Notification();
+        notification.setUserId(lecture.getTeacherId());
+        notification.setTitle("您有新的审核信息");
+        notification.setContent(StringUtils.format("您有新的审核信息，您的：{}已审核，请及时处理", lecture.getName()));
+        notification.setReadFlag(IsReadEnum.IS_READ_2.getValue());
+        notificationService.insertNotification(notification);
+
         lectureService.updateLecture(lecture);
         return lectureAuditMapper.insertLectureAudit(lectureAudit);
     }

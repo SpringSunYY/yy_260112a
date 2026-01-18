@@ -99,7 +99,6 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 20,
-        status: '2', // 默认只显示审核通过的讲座
         name: '' // 讲座名称搜索
       },
       // 是否还有更多数据

@@ -9,14 +9,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="用户编号" prop="userId">
-        <el-input
-          v-model="queryParams.userId"
-          placeholder="请输入用户编号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+      <!--      <el-form-item label="用户编号" prop="userId">-->
+      <!--        <el-input-->
+      <!--          v-model="queryParams.userId"-->
+      <!--          placeholder="请输入用户编号"-->
+      <!--          clearable-->
+      <!--          @keyup.enter.native="handleQuery"-->
+      <!--        />-->
+      <!--      </el-form-item>-->
       <el-form-item label="通知标题" prop="title">
         <el-input
           v-model="queryParams.title"
@@ -53,16 +53,16 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['manage:notification:add']"
-        >新增</el-button>
-      </el-col>
+      <!--      <el-col :span="1.5">-->
+      <!--        <el-button-->
+      <!--          type="primary"-->
+      <!--          plain-->
+      <!--          icon="el-icon-plus"-->
+      <!--          size="mini"-->
+      <!--          @click="handleAdd"-->
+      <!--          v-hasPermi="['manage:notification:add']"-->
+      <!--        >新增</el-button>-->
+      <!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
           type="success"
@@ -72,7 +72,8 @@
           :disabled="single"
           @click="handleUpdate"
           v-hasPermi="['manage:notification:edit']"
-        >修改</el-button>
+        >修改
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -83,7 +84,8 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['manage:notification:remove']"
-        >删除</el-button>
+        >删除
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -93,33 +95,37 @@
           size="mini"
           @click="handleExport"
           v-hasPermi="['manage:notification:export']"
-        >导出</el-button>
+        >导出
+        </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="notificationList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="通知编号" align="center" v-if="columns[0].visible" prop="id" />
-        <el-table-column label="用户编号" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible" prop="userId" />
-        <el-table-column label="通知标题" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="title" />
-        <el-table-column label="通知内容" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible" prop="content" />
-        <el-table-column label="是否已读" align="center" v-if="columns[4].visible" prop="readFlag">
+      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column label="通知编号" align="center" v-if="columns[0].visible" prop="id"/>
+      <el-table-column label="用户" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible"
+                       prop="userName"/>
+      <el-table-column label="通知标题" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible"
+                       prop="title"/>
+      <el-table-column label="通知内容" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible"
+                       prop="content"/>
+      <el-table-column label="是否已读" align="center" v-if="columns[4].visible" prop="readFlag">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.is_read" :value="scope.row.readFlag"/>
         </template>
       </el-table-column>
-        <el-table-column label="创建时间" align="center" v-if="columns[5].visible" prop="createTime" width="180">
+      <el-table-column label="创建时间" align="center" v-if="columns[5].visible" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-        <el-table-column label="读取时间" align="center" v-if="columns[6].visible" prop="readTime" width="180">
+      <el-table-column label="读取时间" align="center" v-if="columns[6].visible" prop="readTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.readTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -127,14 +133,16 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['manage:notification:edit']"
-          >修改</el-button>
+          >修改
+          </el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['manage:notification:remove']"
-          >删除</el-button>
+          >删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -150,14 +158,14 @@
     <!-- 添加或修改通知信息对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="用户编号" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入用户编号" />
-        </el-form-item>
+        <!--        <el-form-item label="用户编号" prop="userId">-->
+        <!--          <el-input v-model="form.userId" placeholder="请输入用户编号" />-->
+        <!--        </el-form-item>-->
         <el-form-item label="通知标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入通知标题" />
+          <el-input :readonly="true" v-model="form.title" placeholder="请输入通知标题"/>
         </el-form-item>
         <el-form-item label="通知内容">
-          <editor v-model="form.content" :min-height="192"/>
+          <el-input :readonly="true" v-model="form.content" :min-height="192"/>
         </el-form-item>
         <el-form-item label="是否已读" prop="readFlag">
           <el-radio-group v-model="form.readFlag">
@@ -165,7 +173,8 @@
               v-for="dict in dict.type.is_read"
               :key="dict.value"
               :label="dict.value"
-            >{{dict.label}}</el-radio>
+            >{{ dict.label }}
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -178,7 +187,13 @@
 </template>
 
 <script>
-import { listNotification, getNotification, delNotification, addNotification, updateNotification } from "@/api/manage/notification";
+import {
+  listNotification,
+  getNotification,
+  delNotification,
+  addNotification,
+  updateNotification
+} from "@/api/manage/notification";
 
 export default {
   name: "Notification",
@@ -187,14 +202,14 @@ export default {
     return {
       //表格展示列
       columns: [
-        { key: 0, label: '通知编号', visible: true },
-          { key: 1, label: '用户编号', visible: true },
-          { key: 2, label: '通知标题', visible: true },
-          { key: 3, label: '通知内容', visible: true },
-          { key: 4, label: '是否已读', visible: true },
-          { key: 5, label: '创建时间', visible: true },
-          { key: 6, label: '读取时间', visible: true },
-        ],
+        {key: 0, label: '通知编号', visible: true},
+        {key: 1, label: '用户编号', visible: true},
+        {key: 2, label: '通知标题', visible: true},
+        {key: 3, label: '通知内容', visible: true},
+        {key: 4, label: '是否已读', visible: true},
+        {key: 5, label: '创建时间', visible: true},
+        {key: 6, label: '读取时间', visible: true},
+      ],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -232,19 +247,19 @@ export default {
       // 表单校验
       rules: {
         userId: [
-          { required: true, message: "用户编号不能为空", trigger: "blur" }
+          {required: true, message: "用户编号不能为空", trigger: "blur"}
         ],
         title: [
-          { required: true, message: "通知标题不能为空", trigger: "blur" }
+          {required: true, message: "通知标题不能为空", trigger: "blur"}
         ],
         content: [
-          { required: true, message: "通知内容不能为空", trigger: "blur" }
+          {required: true, message: "通知内容不能为空", trigger: "blur"}
         ],
         readFlag: [
-          { required: true, message: "是否已读不能为空", trigger: "change" }
+          {required: true, message: "是否已读不能为空", trigger: "change"}
         ],
         createTime: [
-          { required: true, message: "创建时间不能为空", trigger: "blur" }
+          {required: true, message: "创建时间不能为空", trigger: "blur"}
         ],
       }
     };
@@ -299,7 +314,7 @@ export default {
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.id)
-      this.single = selection.length!==1
+      this.single = selection.length !== 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
@@ -341,12 +356,13 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除通知信息编号为"' + ids + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除通知信息编号为"' + ids + '"的数据项？').then(function () {
         return delNotification(ids);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+      }).catch(() => {
+      });
     },
     /** 导出按钮操作 */
     handleExport() {

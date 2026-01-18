@@ -12,13 +12,16 @@ import com.lz.manage.mapper.AppointmentMapper;
 import com.lz.manage.model.domain.Appointment;
 import com.lz.manage.model.domain.Classroom;
 import com.lz.manage.model.domain.Lecture;
+import com.lz.manage.model.domain.Notification;
 import com.lz.manage.model.dto.appointment.AppointmentQuery;
 import com.lz.manage.model.enums.AppointmentStatusEnum;
+import com.lz.manage.model.enums.IsReadEnum;
 import com.lz.manage.model.enums.LectureStatusEnum;
 import com.lz.manage.model.vo.appointment.AppointmentVo;
 import com.lz.manage.service.IAppointmentService;
 import com.lz.manage.service.IClassroomService;
 import com.lz.manage.service.ILectureService;
+import com.lz.manage.service.INotificationService;
 import com.lz.system.service.ISysUserService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -48,8 +51,9 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
 
     @Resource
     private IClassroomService classroomService;
-
-
+    
+    @Resource
+    private INotificationService notificationService;
     //region mybatis代码
 
     /**
@@ -151,6 +155,15 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
                 "状态不能和原数据相同");
         appointment.setAuditUserId(SecurityUtils.getUserId());
         appointment.setAuditTime(DateUtils.getNowDate());
+
+        //发送消息
+        Notification notification = new Notification();
+        notification.setUserId(appointment.getUserId());
+        notification.setTitle("您有新的审核信息");
+        notification.setContent(StringUtils.format("您有新的审核信息，请及时处理"));
+        notification.setReadFlag(IsReadEnum.IS_READ_2.getValue());
+        notificationService.insertNotification(notification);
+
         return appointmentMapper.updateAppointment(appointment);
     }
 

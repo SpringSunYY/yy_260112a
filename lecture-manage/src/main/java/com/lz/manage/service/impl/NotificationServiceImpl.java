@@ -1,26 +1,21 @@
 package com.lz.manage.service.impl;
 
-import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import javax.validation.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.lz.common.utils.StringUtils;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lz.common.utils.DateUtils;
-import javax.annotation.Resource;
-import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.DateUtils;
+import com.lz.common.utils.StringUtils;
 import com.lz.manage.mapper.NotificationMapper;
 import com.lz.manage.model.domain.Notification;
-import com.lz.manage.service.INotificationService;
 import com.lz.manage.model.dto.notification.NotificationQuery;
 import com.lz.manage.model.vo.notification.NotificationVo;
+import com.lz.manage.service.INotificationService;
+import com.lz.system.service.ISysUserService;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 通知信息Service业务层处理
@@ -29,13 +24,16 @@ import com.lz.manage.model.vo.notification.NotificationVo;
  * @date 2026-01-14
  */
 @Service
-public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements INotificationService
-{
+public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements INotificationService {
 
     @Resource
     private NotificationMapper notificationMapper;
 
+    @Resource
+    private ISysUserService sysUserService;
+
     //region mybatis代码
+
     /**
      * 查询通知信息
      *
@@ -43,8 +41,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 通知信息
      */
     @Override
-    public Notification selectNotificationById(Long id)
-    {
+    public Notification selectNotificationById(Long id) {
         return notificationMapper.selectNotificationById(id);
     }
 
@@ -55,9 +52,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 通知信息
      */
     @Override
-    public List<Notification> selectNotificationList(Notification notification)
-    {
-        return notificationMapper.selectNotificationList(notification);
+    public List<Notification> selectNotificationList(Notification notification) {
+        List<Notification> notifications = notificationMapper.selectNotificationList(notification);
+        for (Notification info : notifications) {
+            SysUser sysUser = sysUserService.selectUserById(info.getUserId());
+            if (StringUtils.isNotNull(sysUser)) {
+                info.setUserName(sysUser.getUserName());
+            }
+        }
+        return notifications;
     }
 
     /**
@@ -67,8 +70,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 结果
      */
     @Override
-    public int insertNotification(Notification notification)
-    {
+    public int insertNotification(Notification notification) {
         notification.setCreateTime(DateUtils.getNowDate());
         return notificationMapper.insertNotification(notification);
     }
@@ -80,8 +82,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 结果
      */
     @Override
-    public int updateNotification(Notification notification)
-    {
+    public int updateNotification(Notification notification) {
         return notificationMapper.updateNotification(notification);
     }
 
@@ -92,8 +93,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 结果
      */
     @Override
-    public int deleteNotificationByIds(Long[] ids)
-    {
+    public int deleteNotificationByIds(Long[] ids) {
         return notificationMapper.deleteNotificationByIds(ids);
     }
 
@@ -104,13 +104,13 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      * @return 结果
      */
     @Override
-    public int deleteNotificationById(Long id)
-    {
+    public int deleteNotificationById(Long id) {
         return notificationMapper.deleteNotificationById(id);
     }
+
     //endregion
     @Override
-    public QueryWrapper<Notification> getQueryWrapper(NotificationQuery notificationQuery){
+    public QueryWrapper<Notification> getQueryWrapper(NotificationQuery notificationQuery) {
         QueryWrapper<Notification> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = notificationQuery.getParams();
@@ -118,19 +118,19 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             params = new HashMap<>();
         }
         Long id = notificationQuery.getId();
-        queryWrapper.eq( StringUtils.isNotNull(id),"id",id);
+        queryWrapper.eq(StringUtils.isNotNull(id), "id", id);
 
         Long userId = notificationQuery.getUserId();
-        queryWrapper.eq( StringUtils.isNotNull(userId),"user_id",userId);
+        queryWrapper.eq(StringUtils.isNotNull(userId), "user_id", userId);
 
         String title = notificationQuery.getTitle();
-        queryWrapper.like(StringUtils.isNotEmpty(title) ,"title",title);
+        queryWrapper.like(StringUtils.isNotEmpty(title), "title", title);
 
         String readFlag = notificationQuery.getReadFlag();
-        queryWrapper.eq(StringUtils.isNotEmpty(readFlag) ,"read_flag",readFlag);
+        queryWrapper.eq(StringUtils.isNotEmpty(readFlag), "read_flag", readFlag);
 
         Date createTime = notificationQuery.getCreateTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime"))&&StringUtils.isNotNull(params.get("endCreateTime")),"create_time",params.get("beginCreateTime"),params.get("endCreateTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime")) && StringUtils.isNotNull(params.get("endCreateTime")), "create_time", params.get("beginCreateTime"), params.get("endCreateTime"));
 
         return queryWrapper;
     }
