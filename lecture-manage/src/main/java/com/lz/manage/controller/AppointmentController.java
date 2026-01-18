@@ -3,6 +3,8 @@ package com.lz.manage.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
+
+import com.lz.manage.model.dto.appointment.AppointmentAudit;
 import org.springframework.security.access.prepost.PreAuthorize;
 import javax.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -102,6 +104,17 @@ public class AppointmentController extends BaseController
     {
         Appointment appointment = AppointmentEdit.editToObj(appointmentEdit);
         return toAjax(appointmentService.updateAppointment(appointment));
+    }
+
+    /**
+     * 修改预约信息
+     */
+    @PreAuthorize("@ss.hasPermi('manage:appointment:edit')")
+    @Log(title = "预约信息审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult audit(@RequestBody AppointmentAudit appointmentAudit) {
+        Appointment appointment = AppointmentAudit.editToObj(appointmentAudit);
+        return toAjax(appointmentService.auditAppointment(appointment));
     }
 
     /**

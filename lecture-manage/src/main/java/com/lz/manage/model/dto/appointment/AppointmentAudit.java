@@ -1,11 +1,11 @@
 package com.lz.manage.model.dto.appointment;
 
-import java.io.Serializable;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.lz.manage.model.domain.Appointment;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
-import com.lz.manage.model.domain.Appointment;
+
+import java.io.Serializable;
+
 /**
  * 预约信息Vo对象 tb_appointment
  *
@@ -13,7 +13,7 @@ import com.lz.manage.model.domain.Appointment;
  * @date 2026-01-14
  */
 @Data
-public class AppointmentEdit implements Serializable
+public class AppointmentAudit implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -23,15 +23,12 @@ public class AppointmentEdit implements Serializable
     /** 讲座 */
     private Long lectureId;
 
-    /** 预约描述 */
-    private String appointmentDescription;
 
+    /** 预约状态 */
+    private String status;
 
-    /** 备注 */
-    private String remark;
-
-    /** 预约人 */
-    private Long userId;
+    /** 审核描述 */
+    private String auditDescription;
 
     /**
      * 对象转封装类
@@ -39,7 +36,7 @@ public class AppointmentEdit implements Serializable
      * @param appointmentEdit 编辑对象
      * @return Appointment
      */
-    public static Appointment editToObj(AppointmentEdit appointmentEdit) {
+    public static Appointment editToObj(AppointmentAudit appointmentEdit) {
         if (appointmentEdit == null) {
             return null;
         }

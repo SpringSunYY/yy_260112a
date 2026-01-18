@@ -88,4 +88,6 @@ public interface IAppointmentService extends IService<Appointment>
      * @return Appointment集合
      */
     List<Appointment> selectAppointmentByUserAndLecture(Long userId, Long lectureId);
+
+    int auditAppointment(Appointment appointment);
 }

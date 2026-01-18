@@ -142,7 +142,7 @@
         </template>
       </el-table-column>
       <el-table-column label="审核人" :show-overflow-tooltip="true" align="center" v-if="columns[6].visible"
-                       prop="auditUserId"/>
+                       prop="auditUserName"/>
       <el-table-column label="审核时间" align="center" v-if="columns[7].visible" prop="auditTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
@@ -177,6 +177,14 @@
           <el-button
             size="mini"
             type="text"
+            icon="el-icon-edit"
+            @click="handleAudit(scope.row)"
+            v-hasPermi="['manage:appointment:audit']"
+          >审核
+          </el-button>
+          <el-button
+            size="mini"
+            type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['manage:appointment:remove']"
@@ -203,6 +211,20 @@
         <el-form-item label="预约描述" prop="appointmentDescription">
           <el-input v-model="form.appointmentDescription" placeholder="请输入预约描述"/>
         </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
+        </el-form-item>
+        <!--        <el-form-item label="预约人" prop="userId">-->
+        <!--          <el-input v-model="form.userId" placeholder="请输入预约人"/>-->
+        <!--        </el-form-item>-->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>    <!-- 审核预约信息对话框 -->
+    <el-dialog :title="title" :visible.sync="openAudit" width="500px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="预约状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
@@ -216,15 +238,9 @@
         <el-form-item label="审核描述" prop="auditDescription">
           <el-input v-model="form.auditDescription" placeholder="请输入审核描述"/>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
-        </el-form-item>
-        <!--        <el-form-item label="预约人" prop="userId">-->
-        <!--          <el-input v-model="form.userId" placeholder="请输入预约人"/>-->
-        <!--        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitFormAudit">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -237,7 +253,8 @@ import {
   getAppointment,
   delAppointment,
   addAppointment,
-  updateAppointment
+  updateAppointment,
+  auditAppointment
 } from "@/api/manage/appointment";
 
 export default {
@@ -245,6 +262,8 @@ export default {
   dicts: ['appointment_status'],
   data() {
     return {
+      //打开审核
+      openAudit: false,
       //表格展示列
       columns: [
         {key: 0, label: '编号', visible: true},
@@ -328,6 +347,22 @@ export default {
     this.getList();
   },
   methods: {
+    handleAudit(row){
+      this.reset()
+      const id = row.id || this.ids
+      getAppointment(id).then(response => {
+        this.form = response.data;
+        this.openAudit = true;
+        this.title = "审核预约信息";
+      });
+    },
+    submitFormAudit(){
+      auditAppointment(this.form).then(response => {
+        this.$modal.msgSuccess("审核成功");
+        this.openAudit = false;
+        this.getList();
+      });
+    },
     /** 查询预约信息列表 */
     getList() {
       this.loading = true;
@@ -345,6 +380,7 @@ export default {
     // 取消按钮
     cancel() {
       this.open = false;
+      this.openAudit = false;
       this.reset();
     },
     // 表单重置

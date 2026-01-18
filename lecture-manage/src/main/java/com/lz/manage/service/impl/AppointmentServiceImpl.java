@@ -141,6 +141,19 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
         return appointmentMapper.updateAppointment(appointment);
     }
 
+    @Override
+    public int auditAppointment(Appointment appointment) {
+        Appointment appointmentDb = this.selectAppointmentById(appointment.getId());
+        ThrowUtils.throwIf(StringUtils.isNull(appointmentDb), StringUtils.format("当前预约信息:{}，不存在", appointment.getId()));
+        ThrowUtils.throwIf(appointmentDb.getStatus().equals(AppointmentStatusEnum.APPOINTMENT_STATUS_2.getValue()),
+                "预约已经同意无需审核");
+        ThrowUtils.throwIf(appointmentDb.getStatus().equals(appointment.getStatus()),
+                "状态不能和原数据相同");
+        appointment.setAuditUserId(SecurityUtils.getUserId());
+        appointment.setAuditTime(DateUtils.getNowDate());
+        return appointmentMapper.updateAppointment(appointment);
+    }
+
     /**
      * 批量删除预约信息
      *

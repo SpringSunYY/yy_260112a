@@ -35,6 +35,15 @@ export function updateAppointment(data) {
   })
 }
 
+//审核预约信息
+export function auditAppointment(data) {
+  return request({
+    url: '/manage/appointment/audit',
+    method: 'put',
+    data: data
+  })
+}
+
 // 删除预约信息
 export function delAppointment(id) {
   return request({
