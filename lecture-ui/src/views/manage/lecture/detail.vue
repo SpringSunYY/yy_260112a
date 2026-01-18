@@ -64,19 +64,18 @@
 
       <el-table v-loading="evaluateLoading" :data="evaluateList">
         <el-table-column label="标题" prop="title"/>
-        <el-table-column label="评分" width="120" align="center">
+        <el-table-column label="评分"  align="center">
           <template slot-scope="scope">
-            <el-rate v-model="scope.row.score" disabled show-score/>
+            <el-rate :value="Number(scope.row.score)" disabled show-score/>
           </template>
         </el-table-column>
         <el-table-column label="评价内容" prop="content"/>
-        <el-table-column label="评价人" prop="userName" width="100"/>
-        <el-table-column label="评价时间" width="160" align="center">
+        <el-table-column label="评价人" prop="userName" />
+        <el-table-column label="评价时间" align="center">
           <template slot-scope="scope">
             {{ parseTime(scope.row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="备注" prop="remark" v-if="showRemarkColumn"/>
       </el-table>
 
       <pagination
@@ -256,7 +255,11 @@ export default {
     getEvaluateList() {
       this.evaluateLoading = true;
       listEvaluate(this.queryParams).then(response => {
-        this.evaluateList = response.rows;
+        // 确保评分字段为数字类型
+        this.evaluateList = response.rows.map(item => ({
+          ...item,
+          score: Number(item.score)
+        }));
         this.total = response.total;
         this.evaluateLoading = false;
       }).catch(() => {
@@ -273,7 +276,11 @@ export default {
       this.$refs.evaluateFormRef.validate(valid => {
         if (valid) {
           this.submitLoading = true;
-          addEvaluate(this.evaluateForm).then(response => {
+          const formData = {
+            ...this.evaluateForm,
+            score: Number(this.evaluateForm.score)
+          };
+          addEvaluate(formData).then(response => {
             this.$modal.msgSuccess("评价提交成功");
             this.evaluateDialogVisible = false;
             this.resetEvaluateForm();
@@ -317,9 +324,7 @@ export default {
         remark: '',
         lectureId: this.queryParams.lectureId
       };
-      // 确保评分是整数
       this.$nextTick(() => {
-        this.evaluateForm.score = Math.floor(this.evaluateForm.score);
         this.$refs.evaluateFormRef && this.$refs.evaluateFormRef.clearValidate();
       });
     }

@@ -152,7 +152,7 @@
       <el-table-column label="名称" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="name">
         <template slot-scope="scope">
           <router-link class="link-type"
-                       :to="{name:'Appointment', query:{lectureId:scope.row.id}}">
+                       :to="{name:'LectureDetail', query:{lectureId:scope.row.id}}">
             {{
               scope.row.name
             }}
@@ -174,9 +174,27 @@
         </template>
       </el-table-column>
       <el-table-column label="参加人数" :show-overflow-tooltip="true" align="center" v-if="columns[7].visible"
-                       prop="peopleJoinNumber"/>
+                       prop="peopleJoinNumber">
+        <template slot-scope="scope">
+          <router-link class="link-type"
+                       :to="{name:'Appointment', query:{lectureId:scope.row.id}}">
+            {{
+              scope.row.name
+            }}
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="签到人数" :show-overflow-tooltip="true" align="center" v-if="columns[8].visible"
-                       prop="peopleSignNumber"/>
+                       prop="peopleSignNumber">
+        <template slot-scope="scope">
+          <router-link class="link-type"
+                       :to="{name:'Sign', query:{lectureId:scope.row.id}}">
+            {{
+              scope.row.name
+            }}
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" v-if="columns[9].visible" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.lecture_status" :value="scope.row.status"/>
@@ -200,14 +218,6 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleViewSign(scope.row)"
-            v-hasPermi="['manage:sign:query']"
-          >查看签到
-          </el-button>
           <el-button
             size="mini"
             type="text"
@@ -487,15 +497,6 @@ export default {
     this.getTeacherList();
   },
   methods: {
-    //查看签到
-    handleViewSign(row) {
-      this.$router.push({
-        name: 'Sign',
-        query: {
-          lectureId: row.id
-        }
-      })
-    },
     //审核
     handleAudit(row) {
       this.reset()
