@@ -119,7 +119,13 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
         appointment.setClassroomId(lecture.getClassroomId());
         appointment.setTeacherId(lecture.getTeacherId());
         appointment.setCreateTime(DateUtils.getNowDate());
-        return appointmentMapper.insertAppointment(appointment);
+        int i = appointmentMapper.insertAppointment(appointment);
+        long count = this.count(new LambdaQueryWrapper<Appointment>().eq(Appointment::getLectureId, appointment.getLectureId()));
+        ThrowUtils.throwIf(count >= lecture.getPeopleNumberLimit(),
+                "当前讲座已满");
+        lecture.setPeopleJoinNumber(count);
+        lectureService.updateById(lecture);
+        return i;
     }
 
     /**
@@ -143,7 +149,22 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
      */
     @Override
     public int deleteAppointmentByIds(Long[] ids) {
-        return appointmentMapper.deleteAppointmentByIds(ids);
+        List<Lecture> lectures = new ArrayList<>();
+        for (Long id : ids) {
+            Appointment appointment = this.selectAppointmentById(id);
+            ThrowUtils.throwIf(StringUtils.isNull(appointment), StringUtils.format("当前预约信息:{}，不存在", id));
+            Lecture lecture = lectureService.selectLectureById(appointment.getLectureId());
+            ThrowUtils.throwIf(StringUtils.isNull(lecture), StringUtils.format("当前讲座:{}，不存在", lecture.getName()));
+            ThrowUtils.throwIf(lecture.getStatus().equals(LectureStatusEnum.LECTURE_STATUS_4.getValue()),
+                    StringUtils.format("当前讲座:{}，无法删除预约信息", lecture.getName()));
+            lectures.add(lecture);
+        }
+        int i = appointmentMapper.deleteAppointmentByIds(ids);
+        for (Lecture lecture : lectures) {
+            lecture.setPeopleJoinNumber(this.count(new LambdaQueryWrapper<Appointment>().eq(Appointment::getLectureId, lecture.getId())));
+        }
+        lectureService.updateBatchById(lectures);
+        return i;
     }
 
     /**

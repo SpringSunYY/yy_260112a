@@ -108,7 +108,7 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['manage:appointment:remove']"
-        >删除
+        >取消
         </el-button>
       </el-col>
       <el-col :span="1.5">
@@ -180,7 +180,7 @@
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['manage:appointment:remove']"
-          >删除
+          >取消
           </el-button>
         </template>
       </el-table-column>
@@ -422,11 +422,11 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除预约信息编号为"' + ids + '"的数据项？').then(function () {
+      this.$modal.confirm('是否确认取消预约信息编号为"' + ids + '"的数据项？').then(function () {
         return delAppointment(ids);
       }).then(() => {
         this.getList();
-        this.$modal.msgSuccess("删除成功");
+        this.$modal.msgSuccess("取消成功");
       }).catch(() => {
       });
     },
