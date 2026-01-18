@@ -35,6 +35,11 @@
             <artifactId>lecture-common</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.lz</groupId>
+            <artifactId>lecture-manage</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

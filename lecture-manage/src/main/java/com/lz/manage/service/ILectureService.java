@@ -94,4 +94,6 @@ public interface ILectureService extends IService<Lecture> {
     List<LectureVo> convertVoList(List<Lecture> lectureList);
 
     List<Lecture> selectLectureListHome(Lecture lecture);
+
+    void updateLectureStatus();
 }

@@ -227,6 +227,30 @@ public class LectureServiceImpl extends ServiceImpl<LectureMapper, Lecture> impl
         return lectures;
     }
 
+    @Override
+    public void updateLectureStatus() {
+        //获取所有未结束的讲座
+        Date nowDate = DateUtils.getNowDate();
+        List<Lecture> endLectureList = this.list(
+                new LambdaQueryWrapper<Lecture>()
+                        .ne(Lecture::getStatus, LectureStatusEnum.LECTURE_STATUS_4.getValue())
+                        .lt(Lecture::getLectureEndTime, nowDate));
+        //查询所有正在进行中的
+        List<Lecture> startLectureList = this.list(
+                new LambdaQueryWrapper<Lecture>()
+                        .gt(Lecture::getLectureEndTime, nowDate)
+                        .lt(Lecture::getLectureStartTime, nowDate)
+        );
+        for (Lecture lecture : endLectureList) {
+            lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_4.getValue());
+        }
+        for (Lecture lecture : startLectureList) {
+            lecture.setStatus(LectureStatusEnum.LECTURE_STATUS_3.getValue());
+        }
+        lectureMapper.updateById(startLectureList);
+        lectureMapper.updateById(endLectureList);
+    }
+
     private void initLectureInfo(Lecture info) {
         SysUser sysUser = sysUserService.selectUserById(info.getUserId());
         if (StringUtils.isNotNull(sysUser)) {
