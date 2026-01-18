@@ -25,12 +25,15 @@ public class SignVo implements Serializable
 
     /** 教室 */
     private Long classroomId;
+    private String classroomName;
 
     /** 讲座 */
     private Long lectureId;
+    private String lectureName;
 
     /** 讲师 */
     private Long teacherId;
+    private String teacherName;
 
     /** 签到人 */
     private String name;
@@ -40,6 +43,7 @@ public class SignVo implements Serializable
 
     /** 创建人 */
     private Long userId;
+    private String userName;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")

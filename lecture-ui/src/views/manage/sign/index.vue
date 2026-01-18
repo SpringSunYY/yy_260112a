@@ -115,12 +115,12 @@
     <el-table v-loading="loading" :data="signList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="编号" align="center" v-if="columns[0].visible" prop="id" />
-        <el-table-column label="教室" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible" prop="classroomId" />
-        <el-table-column label="讲座" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="lectureId" />
-        <el-table-column label="讲师" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible" prop="teacherId" />
+        <el-table-column label="教室" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible" prop="classroomName" />
+        <el-table-column label="讲座" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible" prop="lectureName" />
+        <el-table-column label="讲师" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible" prop="teacherName" />
         <el-table-column label="签到人" :show-overflow-tooltip="true" align="center" v-if="columns[4].visible" prop="name" />
         <el-table-column label="备注" :show-overflow-tooltip="true" align="center" v-if="columns[5].visible" prop="remark" />
-        <el-table-column label="创建人" :show-overflow-tooltip="true" align="center" v-if="columns[6].visible" prop="userId" />
+        <el-table-column label="创建人" :show-overflow-tooltip="true" align="center" v-if="columns[6].visible" prop="userName" />
         <el-table-column label="创建时间" align="center" v-if="columns[7].visible" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
@@ -162,18 +162,18 @@
     <!-- 添加或修改签到信息对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="讲座" prop="lectureId">
-          <el-input v-model="form.lectureId" placeholder="请输入讲座" />
-        </el-form-item>
-        <el-form-item label="签到人" prop="name">
-          <el-input v-model="form.name" placeholder="请输入签到人" />
-        </el-form-item>
+<!--        <el-form-item label="讲座" prop="lectureId">-->
+<!--          <el-input v-model="form.lectureId" placeholder="请输入讲座" />-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="签到人" prop="name">-->
+<!--          <el-input v-model="form.name" placeholder="请输入签到人" />-->
+<!--        </el-form-item>-->
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
-        <el-form-item label="创建人" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入创建人" />
-        </el-form-item>
+<!--        <el-form-item label="创建人" prop="userId">-->
+<!--          <el-input v-model="form.userId" placeholder="请输入创建人" />-->
+<!--        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>

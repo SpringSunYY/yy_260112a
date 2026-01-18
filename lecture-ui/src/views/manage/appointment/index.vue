@@ -164,7 +164,7 @@
           <span>{{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -181,6 +181,14 @@
             @click="handleAudit(scope.row)"
             v-hasPermi="['manage:appointment:audit']"
           >审核
+          </el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-plus"
+            @click="handleSign(scope.row)"
+            v-hasPermi="['manage:sign:add']"
+          >签到
           </el-button>
           <el-button
             size="mini"
@@ -244,6 +252,28 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 添加或修改签到信息对话框 -->
+    <el-dialog :title="title" :visible.sync="openSign" width="500px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <!--        <el-form-item label="讲座" prop="lectureId">-->
+        <!--          <el-input v-model="form.lectureId" placeholder="请输入讲座"/>-->
+        <!--        </el-form-item>-->
+        <el-form-item label="签到人" prop="name">
+          <el-input v-model="form.name" placeholder="请输入签到人"/>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"/>
+        </el-form-item>
+        <!--        <el-form-item label="创建人" prop="userId">-->
+        <!--          <el-input v-model="form.userId" placeholder="请输入创建人"/>-->
+        <!--        </el-form-item>-->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFormSign">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -256,12 +286,15 @@ import {
   updateAppointment,
   auditAppointment
 } from "@/api/manage/appointment";
+import {addSign} from "@/api/manage/sign";
 
 export default {
   name: "Appointment",
   dicts: ['appointment_status'],
   data() {
     return {
+      //打开签到
+      openSign: false,
       //打开审核
       openAudit: false,
       //表格展示列
@@ -319,6 +352,9 @@ export default {
       exportUrl: 'manage/appointment/export',
       // 表单校验
       rules: {
+        name: [
+          {required: true, message: "签到人不能为空", trigger: "blur"}
+        ],
         classroomId: [
           {required: true, message: "教室不能为空", trigger: "blur"}
         ],
@@ -347,7 +383,25 @@ export default {
     this.getList();
   },
   methods: {
-    handleAudit(row){
+    //签到
+    handleSign(row) {
+      this.reset()
+      const id = row.id || this.ids
+      getAppointment(id).then(response => {
+        this.form = response.data;
+        this.form.remark = "";
+        this.openSign = true;
+        this.title = "签到";
+      });
+    },
+    submitFormSign() {
+      addSign(this.form).then(response => {
+        this.$modal.msgSuccess("签到成功");
+        this.openSign = false;
+      })
+    },
+    //审核
+    handleAudit(row) {
       this.reset()
       const id = row.id || this.ids
       getAppointment(id).then(response => {
@@ -356,7 +410,7 @@ export default {
         this.title = "审核预约信息";
       });
     },
-    submitFormAudit(){
+    submitFormAudit() {
       auditAppointment(this.form).then(response => {
         this.$modal.msgSuccess("审核成功");
         this.openAudit = false;
@@ -379,6 +433,7 @@ export default {
     },
     // 取消按钮
     cancel() {
+      this.openSign = false;
       this.open = false;
       this.openAudit = false;
       this.reset();
